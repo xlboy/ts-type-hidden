@@ -1,4 +1,4 @@
-import type vscode from 'vscode';
+import vscode from 'vscode';
 
 import { version } from '../package.json';
 import { registerCommand } from './core/command';
@@ -14,6 +14,6 @@ export function activate(vscodeContext: vscode.ExtensionContext) {
     return;
   }
 
-  EditorContext.init();
+  EditorContext.init(vscodeContext);
   registerCommand(vscodeContext);
 }

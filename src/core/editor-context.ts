@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import type { FileInfo } from './types';
+import { TypeAnalyzer, type AnalyzedType } from './helpers/type-analyzer';
+import { debounce, isEqual } from 'lodash-es';
 
 export class EditorContext {
   private static _instance: EditorContext;
@@ -12,40 +14,59 @@ export class EditorContext {
 
     return EditorContext._instance;
   }
-  public static init() {
-    EditorContext._instance = new EditorContext();
+  public static init(vscodeContext: vscode.ExtensionContext) {
+    EditorContext._instance = new EditorContext(vscodeContext);
   }
 
   private files = new Map</* filePath */ string, FileInfo>();
   // TODO: 值可能是从某个本地缓存的地方拿的
   private isHiddenMode = true;
+  private readonly decorationType = {
+    hidden: vscode.window.createTextEditorDecorationType({
+      textDecoration: 'opacity: 0; font-size: 0; display: none',
+      gutterIconPath: vscode.Uri.file(`${__dirname}/../res/col-icon.svg`),
+      gutterIconSize: 'contain'
+    }),
+    show: vscode.window.createTextEditorDecorationType({
+      textDecoration: 'opacity: 1; font-size: 14px; display: inline'
+      // gutterIconPath: vscode.Uri.file(`${__dirname}/../res/col-icon.svg`),
+      // gutterIconSize: 'contain'
+    })
+  };
 
-  private constructor() {
+  private curFocusedType: AnalyzedType | undefined;
+
+  private constructor(private readonly vscodeContext: vscode.ExtensionContext) {
     this.watch();
     this.initVisibleEditors();
+
+    this.isHiddenMode = vscodeContext.globalState.get('isHiddenMode', true);
+
+    if (this.isHiddenMode) this.hideType();
   }
 
   toggleHiddenType() {
     this.isHiddenMode = !this.isHiddenMode;
     this.isHiddenMode ? this.hideType() : this.showType();
+    this.vscodeContext.globalState.update('isHiddenMode', this.isHiddenMode);
   }
 
   private hideType(editor = vscode.window.activeTextEditor) {
     if (editor && this.utils.isTargetDocument(editor.document)) {
       const editorInfo = this.files.get(editor.document.fileName);
+      if (!editorInfo) return;
 
-      if (editorInfo) {
-        const decorationType = vscode.window.createTextEditorDecorationType({
-          textDecoration: 'opacity: 0; font-size: 0; display: none'
-        });
+      const ranges = editorInfo.analyzedTypes
+        .filter(type => !isEqual(type, this.curFocusedType))
+        .map(
+          type =>
+            new vscode.Range(
+              editor.document.positionAt(type.range.pos),
+              editor.document.positionAt(type.range.end)
+            )
+        );
 
-        const startPos = new vscode.Position(1, 0);
-        const endPos = new vscode.Position(4, 10);
-        const range = new vscode.Range(startPos, endPos);
-
-        const decorationOptions: vscode.DecorationOptions = { range };
-        editor.setDecorations(decorationType, [decorationOptions]);
-      }
+      editor.setDecorations(this.decorationType.hidden, ranges);
     }
   }
 
@@ -56,9 +77,7 @@ export class EditorContext {
       const editorInfo = this.files.get(activatedEditor.document.fileName);
 
       if (editorInfo) {
-        const { code, analyzedTypeInfos } = editorInfo;
-        const { document } = activatedEditor;
-        const { fileName } = document;
+        activatedEditor.setDecorations(this.decorationType.hidden, []);
       }
     }
   }
@@ -69,9 +88,10 @@ export class EditorContext {
         const filePath = editor!.document.fileName;
 
         if (!this.files.has(filePath)) {
+          const fileCode = editor!.document.getText();
           this.files.set(filePath, {
-            code: editor!.document.getText(),
-            analyzedTypeInfos: []
+            code: fileCode,
+            analyzedTypes: new TypeAnalyzer(fileCode).analyze()
           });
         }
 
@@ -79,13 +99,43 @@ export class EditorContext {
       }
     });
 
-    vscode.workspace.onDidChangeTextDocument(event => {
-      const editorInfo = this.files.get(event.document.fileName);
+    vscode.workspace.onDidChangeTextDocument(
+      debounce(event => {
+        const editorInfo = this.files.get(event.document.fileName);
 
-      if (editorInfo) {
-        const newCode = event.document.getText();
-        editorInfo.code = newCode;
-        console.log('发生改变啦： ' + event.document.fileName);
+        if (editorInfo) {
+          const newCode = event.document.getText();
+          editorInfo.code = newCode;
+          editorInfo.analyzedTypes = new TypeAnalyzer(newCode).analyze();
+
+          if (this.isHiddenMode) this.hideType();
+        }
+      }, 1000)
+    );
+
+    vscode.window.onDidChangeTextEditorSelection(event => {
+      if (this.utils.isTargetDocument(event.textEditor.document)) {
+        const editorInfo = this.files.get(event.textEditor.document.fileName);
+
+        if (editorInfo) {
+          const cursorPos = event.selections[0].active;
+          const cursorOffset = event.textEditor.document.offsetAt(cursorPos);
+          const cursorType = editorInfo.analyzedTypes.find(
+            type => {
+              const start = event.textEditor.document.positionAt(type.range.pos);
+              return (
+                cursorPos.line === start.line ||
+                (cursorOffset >= type.range.pos && cursorOffset <= type.range.end)
+              );
+            }
+          );
+
+          if (!isEqual(cursorType, this.curFocusedType)) {
+            this.curFocusedType = cursorType;
+
+            if (this.isHiddenMode) this.hideType();
+          }
+        }
       }
     });
   }
@@ -93,9 +143,10 @@ export class EditorContext {
   private initVisibleEditors() {
     vscode.window.visibleTextEditors.forEach(editor => {
       if (this.utils.isTargetDocument(editor.document)) {
+        const fileCode = editor.document.getText();
         this.files.set(editor.document.fileName, {
-          code: editor.document.getText(),
-          analyzedTypeInfos: []
+          code: fileCode,
+          analyzedTypes: new TypeAnalyzer(fileCode).analyze()
         });
       }
     });
@@ -103,7 +154,11 @@ export class EditorContext {
 
   private utils = {
     isTargetDocument(document: vscode.TextDocument) {
-      return document.languageId === 'typescript' && !document.isUntitled;
+      return (
+        (document.languageId === 'typescript' ||
+          document.languageId === 'typescriptreact') &&
+        !document.isUntitled
+      );
     }
   };
 }
