@@ -1,0 +1,5 @@
+.history
+.pnpm-debug.log
+node_modules
+dist
+__snapshots__
