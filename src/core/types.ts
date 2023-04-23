@@ -1,6 +1,6 @@
+import type { AnalyzedType } from './helpers/type-analyzer';
+
 export interface FileInfo {
   code: string;
-  analyzedTypeInfos: TypeInfo[]
+  analyzedTypes: AnalyzedType[];
 }
-  
-export interface TypeInfo {};

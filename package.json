@@ -29,7 +29,8 @@
     "commands": [
       {
         "command": "ts-type-hidden.toggleHiddenType",
-        "title": "TS Type Hidden: Toggle Hidden Type"
+        "title": "TS Type Hidden: Toggle Hidden Type",
+        "when": "resourceLangId == 'typescript' || resourceLangId == 'typescriptreact'"
       }
     ],
     "configuration": {
@@ -42,11 +43,20 @@
           "description": "Enable this extension"
         }
       }
-    }
+    },
+    "keybindings": [
+      {
+        "command": "ts-type-hidden.toggleHiddenType",
+        "key": "ctrl+shift+t",
+        "mac": "cmd+shift+t",
+        "when": "editorTextFocus && resourceLangId == 'typescript' || resourceLangId == 'typescriptreact'"
+      }
+    ]
   },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch src",
+    "test": "vitest run",
     "type-check": "tsc",
     "vsce-package": "tsx scripts/vsce-package",
     "vsce-publish": "tsx scripts/vsce-package --publish"
@@ -54,17 +64,20 @@
   "devDependencies": {
     "@types/fs-extra": "^11.0.1",
     "@types/glob": "^8.1.0",
+    "@types/lodash-es": "^4.17.7",
     "@types/mocha": "^10.0.1",
     "@types/vscode": "^1.70.0",
     "@vscode/test-electron": "^2.3.0",
     "chalk": "^5.2.0",
     "fs-extra": "^11.1.1",
     "glob": "^8.1.0",
+    "lodash-es": "^4.17.21",
     "mocha": "^10.2.0",
     "prettier": "^2.8.7",
     "tsup": "^6.6.3",
     "type-fest": "^3.8.0",
     "typescript": "^5.0.4",
+    "vite": "^4.3.1",
     "vitest": "^0.28.4"
   }
 }

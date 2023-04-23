@@ -3,33 +3,39 @@ lockfileVersion: 5.4
 specifiers:
   '@types/fs-extra': ^11.0.1
   '@types/glob': ^8.1.0
+  '@types/lodash-es': ^4.17.7
   '@types/mocha': ^10.0.1
   '@types/vscode': ^1.70.0
   '@vscode/test-electron': ^2.3.0
   chalk: ^5.2.0
   fs-extra: ^11.1.1
   glob: ^8.1.0
+  lodash-es: ^4.17.21
   mocha: ^10.2.0
   prettier: ^2.8.7
   tsup: ^6.6.3
   type-fest: ^3.8.0
   typescript: ^5.0.4
+  vite: ^4.3.1
   vitest: ^0.28.4
 
 devDependencies:
   '@types/fs-extra': 11.0.1
   '@types/glob': 8.1.0
+  '@types/lodash-es': 4.17.7
   '@types/mocha': 10.0.1
   '@types/vscode': 1.77.0
   '@vscode/test-electron': 2.3.0
   chalk: 5.2.0
   fs-extra: 11.1.1
   glob: 8.1.0
+  lodash-es: 4.17.21
   mocha: 10.2.0
   prettier: 2.8.7
   tsup: 6.7.0_typescript@5.0.4
   type-fest: 3.8.0
   typescript: 5.0.4
+  vite: 4.3.1
   vitest: 0.28.5
 
 packages:
@@ -320,6 +326,16 @@ packages:
     resolution: {integrity: sha512-GSgiRCVeapDN+3pqA35IkQwasaCh/0YFH5dEF6S88iDvEn901DjOeH3/QPY+XYP1DFzDZPvIvfeEgk+7br5png==}
     dependencies:
       '@types/node': 18.15.13
+    dev: true
+
+  /@types/lodash-es/4.17.7:
+    resolution: {integrity: sha512-z0ptr6UI10VlU6l5MYhGwS4mC8DZyYer2mCoyysZtSF7p26zOX8UpbrV0YpNYLGS8K4PUFIyEr62IMFFjveSiQ==}
+    dependencies:
+      '@types/lodash': 4.14.194
+    dev: true
+
+  /@types/lodash/4.14.194:
+    resolution: {integrity: sha512-r22s9tAS7imvBt2lyHC9B8AGwWnXaYb1tY09oyLkXDs4vArpYJzw09nj8MLx5VfciBPGIb+ZwG0ssYnEPJxn/g==}
     dev: true
 
   /@types/minimatch/5.1.2:
@@ -1037,6 +1053,10 @@ packages:
       p-locate: 5.0.0
     dev: true
 
+  /lodash-es/4.17.21:
+    resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
+    dev: true
+
   /lodash.sortby/4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
     dev: true
@@ -1693,6 +1713,38 @@ packages:
       - sugarss
       - supports-color
       - terser
+    dev: true
+
+  /vite/4.3.1:
+    resolution: {integrity: sha512-EPmfPLAI79Z/RofuMvkIS0Yr091T2ReUoXQqc5ppBX/sjFRhHKiPPF/R46cTdoci/XgeQpB23diiJxq5w30vdg==}
+    engines: {node: ^14.18.0 || >=16.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': '>= 14'
+      less: '*'
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      esbuild: 0.17.17
+      postcss: 8.4.23
+      rollup: 3.20.7
+    optionalDependencies:
+      fsevents: 2.3.2
     dev: true
 
   /vite/4.3.1_@types+node@18.15.13:
