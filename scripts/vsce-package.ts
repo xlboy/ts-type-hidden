@@ -7,7 +7,7 @@ async function main(toPublish: boolean) {
   const rawJSON = await fs.readFile(pkgPath, 'utf-8');
   const pkg = JSON.parse(rawJSON);
 
-  pkg.name = 'TypeZen';
+  pkg.name = 'TS Type Hidden';
 
   await fs.writeJSON(pkgPath, pkg, { spaces: 2 });
   try {
