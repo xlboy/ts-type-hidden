@@ -214,6 +214,27 @@ const d = () => {
   ]);
 });
 
+it('satisfies expression', () => {
+  const analyzer = new TypeAnalyzer(`
+const a = 1 satisfies number;
+const b = 1 satisfies number | string;
+const c = 1 satisfies number | string | null;
+
+const d = () => {
+  return 333 satisfies any
+}
+`);
+
+  analyzer.analyze();
+
+  expect(analyzer.analyzedTypes).toMatchObject([
+    { range: { pos: 12, end: 29 }, text: ' satisfies number' },
+    { range: { pos: 42, end: 68 }, text: ' satisfies number | string' },
+    { range: { pos: 81, end: 114 }, text: ' satisfies number | string | null' },
+    { range: { pos: 147, end: 161 }, text: ' satisfies any' }
+  ]);
+});
+
 it('type assertion', () => {
   const analyzer = new TypeAnalyzer(`
 const a =<number>1;
@@ -227,5 +248,23 @@ const c = <number | string | null>1;
     { range: { pos: 10, end: 18 }, text: '<number>' },
     { range: { pos: 31, end: 48 }, text: '<number | string>' },
     { range: { pos: 61, end: 85 }, text: '<number | string | null>' }
+  ]);
+});
+
+it('call expression', () => {
+  const analyzer = new TypeAnalyzer(`
+b<number>();
+new d<number, string>();
+f<number, string, null>();
+new Set<PersistListener<S>>()
+`);
+
+  analyzer.analyze();
+
+  expect(analyzer.analyzedTypes).toMatchObject([
+    { range: { pos: 2, end: 10 }, text: '<number>' },
+    { range: { pos: 19, end: 35 }, text: '<number, string>' },
+    { range: { pos: 40, end: 62 }, text: '<number, string, null>' },
+    { range: { end: 93, pos: 73 }, text: '<PersistListener<S>>' }
   ]);
 });

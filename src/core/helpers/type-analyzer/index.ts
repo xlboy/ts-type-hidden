@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { log } from '../../log';
-import { isEqual } from 'lodash-es';
+import { functionsIn, isEqual } from 'lodash-es';
 
 export interface AnalyzedType {
   range: ts.TextRange;
@@ -65,8 +65,6 @@ export class TypeAnalyzer {
         this.handleDifferentNode(parent!, node);
       } else {
         console.error('[Error]: parent is null');
-
-        // log.appendLine('[Error]: parent is null');
       }
     } else {
       ts.forEachChild(node, child => this.visit(child, node));
@@ -82,8 +80,11 @@ export class TypeAnalyzer {
       [ts.SyntaxKind.ArrowFunction]: handleParentFunction.bind(this),
       [ts.SyntaxKind.Parameter]: handleParentParameter.bind(this),
       [ts.SyntaxKind.VariableDeclaration]: handleParentVariableDeclaration.bind(this),
-      [ts.SyntaxKind.AsExpression]: handleParentAsExpression.bind(this),
-      [ts.SyntaxKind.TypeAssertionExpression]: handleParentTypeAssertionExpr.bind(this)
+      [ts.SyntaxKind.AsExpression]: handleParentAsOrSatisfiesExpr.bind(this),
+      [ts.SyntaxKind.SatisfiesExpression]: handleParentAsOrSatisfiesExpr.bind(this),
+      [ts.SyntaxKind.TypeAssertionExpression]: handleParentTypeAssertionExpr.bind(this),
+      [ts.SyntaxKind.CallExpression]: handleParentCallOrNewExpr.bind(this),
+      [ts.SyntaxKind.NewExpression]: handleParentCallOrNewExpr.bind(this)
     };
 
     const childNodeHandlers: NodeHandlers = {
@@ -99,25 +100,45 @@ export class TypeAnalyzer {
       parentNodeHandlers[parent.kind]!(parent, child);
     } else {
       console.error('[Error]: Unknown parent node kind: ' + parent.kind);
-      // log.appendLine('[Error]: Unknown parent node kind: ' + parent.kind);
     }
 
     if (child.kind in childNodeHandlers) {
       childNodeHandlers[child.kind]!(child);
     } else {
       console.error('[Error]: Unknown parent node kind: ' + parent.kind);
-      // log.appendLine('[Error]: Unknown parent node kind: ' + parent.kind);
     }
 
     return;
 
+    function handleParentCallOrNewExpr(
+      this: TypeAnalyzer,
+      parent: ts.CallExpression | ts.NewExpression,
+      curChild: ts.Node
+    ) {
+      if (parent.typeArguments && parent.typeArguments.length > 0) {
+        const children = parent.getChildren(this.sourceFile);
+
+        const startIndex = children.findIndex(
+          child => child.pos === parent.typeArguments![0].pos
+        );
+        const endIndex = children.findIndex(
+          child => child.end === parent.typeArguments!.at(-1)!.end
+        );
+        // <
+        const prevNode = children[startIndex - 1];
+        // >
+        const nextNode = children[endIndex + 1];
+        return this.pushAnalyzedType(prevNode.end - 1, nextNode.pos + 1);
+      }
+    }
+
+    // <number>a
     function handleParentTypeAssertionExpr(
       this: TypeAnalyzer,
       parent: ts.TypeAssertion,
       curChild: ts.Node
     ) {
       const children = parent.getChildren(this.sourceFile);
-      // <number>a
       const index = children.findIndex(
         child => child.pos === curChild.pos && child.end === curChild.end
       );
@@ -129,17 +150,17 @@ export class TypeAnalyzer {
       return this.pushAnalyzedType(prevNode.end - 1, nextNode.pos + 1);
     }
 
-    function handleParentAsExpression(
+    // context = `a as number` | `a satisfies number`, curChild = `number`
+    function handleParentAsOrSatisfiesExpr(
       this: TypeAnalyzer,
-      parent: ts.AsExpression,
+      parent: ts.AsExpression | ts.SatisfiesExpression,
       curChild: ts.Node
     ) {
       const children = parent.getChildren(this.sourceFile);
-      // a as number
       const index = children.findIndex(
         child => child.pos === curChild.pos && child.end === curChild.end
       );
-      // as
+      // as, satisfies
       const prevNode = children[index - 1];
 
       return this.pushAnalyzedType(prevNode.pos, curChild.end);
@@ -165,13 +186,13 @@ export class TypeAnalyzer {
       }
     }
 
+    // context = `const a: number`, curChild = `number`
     function handleParentVariableDeclaration(
       this: TypeAnalyzer,
       parent: ts.VariableDeclaration,
       curChild: ts.Node
     ) {
       const children = parent.getChildren(this.sourceFile);
-      // a: number
       const index = children.findIndex(
         child => child.pos === curChild.pos && child.end === curChild.end
       );
@@ -187,14 +208,13 @@ export class TypeAnalyzer {
       this.pushAnalyzedType(child.pos, child.end);
     }
 
+    // context = `a: number`, curChild = `number`
     function handleParentParameter(
       this: TypeAnalyzer,
       parent: ts.ParameterDeclaration,
       curChild: ts.Node
     ) {
-      // (a: string)
       const children = parent.getChildren(this.sourceFile);
-      // a: number
       const index = children.findIndex(
         child => child.pos === curChild.pos && child.end === curChild.end
       );
