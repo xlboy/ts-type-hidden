@@ -98,6 +98,7 @@ export class TypeAnalyzer {
       [ts.SyntaxKind.MethodDeclaration]: handleParentFunction.bind(this),
       [ts.SyntaxKind.FunctionExpression]: handleParentFunction.bind(this),
       [ts.SyntaxKind.ArrowFunction]: handleParentFunction.bind(this),
+      [ts.SyntaxKind.GetAccessor]: handleParentFunction.bind(this),
       [ts.SyntaxKind.Parameter]: handleParentParameter.bind(this),
       [ts.SyntaxKind.VariableDeclaration]: handleParentVariableDeclaration.bind(this),
       [ts.SyntaxKind.AsExpression]: handleParentAsOrSatisfiesExpr.bind(this),
@@ -105,7 +106,7 @@ export class TypeAnalyzer {
       [ts.SyntaxKind.TypeAssertionExpression]: handleParentTypeAssertionExpr.bind(this),
       [ts.SyntaxKind.CallExpression]: handleParentCallOrNewExpr.bind(this),
       [ts.SyntaxKind.NewExpression]: handleParentCallOrNewExpr.bind(this),
-      [ts.SyntaxKind.PropertyDeclaration]: handleParentPropertyDeclaration.bind(this)
+      [ts.SyntaxKind.PropertyDeclaration]: handleParentPropertyDeclaration.bind(this),
     };
 
     const childNodeHandlers: NodeHandlers = {

@@ -305,7 +305,7 @@ class A {
   protected c(b: number | 1): {
     e: 1
   }
-  protected get compileUtils() {
+  protected get compileUtils(): any | 'compileUtils' {
     const abc = {
       getConfig: (): ReadonlyDeep<InnerCompilerConfig> => {
         return getCurrentCompileConfig() as any as unknown;
@@ -329,10 +329,11 @@ class A {
         range: { pos: 162, end: 206 },
         text: '  protected c(b: number | 1): {\n    e: 1\n  }'
       },
-      { range: { pos: 277, end: 312 }, text: ': ReadonlyDeep<InnerCompilerConfig>' },
-      { range: { pos: 358, end: 365 }, text: ' as any' },
-      { range: { pos: 365, end: 376 }, text: ' as unknown' },
-      { range: { pos: 396, end: 402 }, text: ': void' }
+      { range: { pos: 237, end: 259 }, text: ": any | 'compileUtils'" },
+      { range: { pos: 299, end: 334 }, text: ': ReadonlyDeep<InnerCompilerConfig>' },
+      { range: { pos: 380, end: 387 }, text: ' as any' },
+      { range: { pos: 387, end: 398 }, text: ' as unknown' },
+      { range: { pos: 418, end: 424 }, text: ': void' }
     ]);
   });
 
