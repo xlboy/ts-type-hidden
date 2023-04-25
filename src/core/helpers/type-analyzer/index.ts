@@ -104,7 +104,8 @@ export class TypeAnalyzer {
       [ts.SyntaxKind.SatisfiesExpression]: handleParentAsOrSatisfiesExpr.bind(this),
       [ts.SyntaxKind.TypeAssertionExpression]: handleParentTypeAssertionExpr.bind(this),
       [ts.SyntaxKind.CallExpression]: handleParentCallOrNewExpr.bind(this),
-      [ts.SyntaxKind.NewExpression]: handleParentCallOrNewExpr.bind(this)
+      [ts.SyntaxKind.NewExpression]: handleParentCallOrNewExpr.bind(this),
+      [ts.SyntaxKind.PropertyDeclaration]: handleParentPropertyDeclaration.bind(this)
     };
 
     const childNodeHandlers: NodeHandlers = {
@@ -113,7 +114,9 @@ export class TypeAnalyzer {
       [ts.SyntaxKind.VariableStatement]: handleChildDeclareStatement.bind(this),
       [ts.SyntaxKind.ClassDeclaration]: handleChildDeclareStatement.bind(this),
       [ts.SyntaxKind.ModuleDeclaration]: handleChildDeclareStatement.bind(this),
-      [ts.SyntaxKind.EnumDeclaration]: handleChildDeclareStatement.bind(this)
+      [ts.SyntaxKind.EnumDeclaration]: handleChildDeclareStatement.bind(this),
+      [ts.SyntaxKind.GetAccessor]: handleChildGetOrSetAccessor.bind(this),
+      [ts.SyntaxKind.SetAccessor]: handleChildGetOrSetAccessor.bind(this)
     };
 
     if (parent.kind in parentNodeHandlers) {
@@ -130,6 +133,22 @@ export class TypeAnalyzer {
 
     return;
 
+    // [class-domain] context: `class A { a: number }`, get `number`
+    function handleParentPropertyDeclaration(
+      this: TypeAnalyzer,
+      parent: ts.PropertyDeclaration,
+      curChild: ts.Node
+    ) {
+      if (curChild === parent.type) {
+        const children = parent.getChildren(this.sourceFile);
+        const startIndex = children.findIndex(child => child.pos === parent.type!.pos);
+        // :
+        const prevNode = children[startIndex - 1];
+        return this.pushAnalyzedType(prevNode.end - 1, parent.type!.end);
+      }
+    }
+
+    // parent = `fn<number>()` | `new fn<number>()`, get `number`(typeArguments)
     function handleParentCallOrNewExpr(
       this: TypeAnalyzer,
       parent: ts.CallExpression | ts.NewExpression,
@@ -152,7 +171,7 @@ export class TypeAnalyzer {
       }
     }
 
-    // <number>a
+    // context: `<number>a`, get `number`
     function handleParentTypeAssertionExpr(
       this: TypeAnalyzer,
       parent: ts.TypeAssertion,
@@ -221,6 +240,13 @@ export class TypeAnalyzer {
       this.pushAnalyzedType(prevNode.end - 1, curChild.end);
     }
 
+    function handleChildGetOrSetAccessor(
+      this: TypeAnalyzer,
+      curChild: ts.GetAccessorDeclaration | ts.SetAccessorDeclaration
+    ) {
+      ts.forEachChild(curChild, _child => this.visit(_child, curChild));
+    }
+
     function handleChildInterfaceOrTypeAlias(
       this: TypeAnalyzer,
       child: ts.InterfaceDeclaration
@@ -250,22 +276,33 @@ export class TypeAnalyzer {
       );
     }
 
+    // FunctionDeclaration | MethodDeclaration | FunctionExpression
     function handleParentFunction(
       this: TypeAnalyzer,
       parent: ts.FunctionDeclaration | ts.MethodDeclaration | ts.FunctionExpression,
       curChild: ts.Node
     ) {
-      // 没有 body，如： function a<B extends 222>(test: ...): void;
-      if (!parent.body) {
-        return this.pushAnalyzedType(parent.pos, parent.end);
+      // function a<B extends 222>(test: ...): void;
+      const isOverload = parent.body === undefined;
+      if (isOverload) {
+        // public a<B extends 222>(test: ...): void;
+        if (ts.isMethodDeclaration(parent)) {
+          let startPos = parent.name.end;
+          if (parent.modifiers && parent.modifiers.length > 0) {
+            startPos = parent.modifiers[0].pos;
+          }
+          return this.pushAnalyzedType(startPos, parent.end);
+        } else {
+          return this.pushAnalyzedType(parent.pos, parent.end);
+        }
       }
+
       const children = parent.getChildren(this.sourceFile);
       const index = children.findIndex(
         child => child.pos === curChild.pos && child.end === curChild.end
       );
 
-      // 有 body，如： function a<B extends 222>(test: ...) { ... }
-
+      // ↓↓ function a<B extends 222>(test: ...) { ... } ↓↓
       if (ts.isTypeParameterDeclaration(curChild) && parent.typeParameters) {
         // children.slice(startIndex, endIndex) = B extends 222, C extends ...
         const startIndex = children.findIndex(

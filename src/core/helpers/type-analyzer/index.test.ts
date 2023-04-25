@@ -197,11 +197,11 @@ it('as expression', () => {
   const analyzer = new TypeAnalyzer(`
 const a = 1 as number;
 const b = 1 as number | string;
-const c = 1 as number | string | null;
+const c = 1 as number | string | null as 111 as 3;
 
-const d = () => {
-  return 333 as any
-}
+// const d = () => {
+  // return 333 as any
+// }
 `);
 
   analyzer.analyze();
@@ -210,7 +210,8 @@ const d = () => {
     { range: { pos: 12, end: 22 }, text: ' as number' },
     { range: { pos: 35, end: 54 }, text: ' as number | string' },
     { range: { pos: 67, end: 93 }, text: ' as number | string | null' },
-    { range: { pos: 126, end: 133 }, text: ' as any' }
+    { range: { pos: 93, end: 100 }, text: ' as 111' },
+    { range: { pos: 100, end: 105 }, text: ' as 3' }
   ]);
 });
 
@@ -267,4 +268,85 @@ new Set<PersistListener<S>>()
     { range: { pos: 40, end: 62 }, text: '<number, string, null>' },
     { range: { end: 93, pos: 73 }, text: '<PersistListener<S>>' }
   ]);
+});
+
+describe('class domain', () => {
+  it('property declaration', () => {
+    const analyzer = new TypeAnalyzer(`
+class A {
+  a: number;
+  public b: string;
+  protected c: {
+    e: 1
+  }
+  private d: () => void = () => {}
+}
+  `);
+
+    analyzer.analyze();
+
+    expect(analyzer.analyzedTypes).toMatchObject([
+      { range: { pos: 14, end: 22 }, text: ': number' },
+      { range: { pos: 34, end: 42 }, text: ': string' },
+      { range: { pos: 57, end: 73 }, text: ': {\n    e: 1\n  }' },
+      { range: { pos: 85, end: 97 }, text: ': () => void' }
+    ]);
+  });
+
+  it('method declaration', () => {
+    const analyzer = new TypeAnalyzer(`
+class A {
+  public a(p: 1): boolean;
+  public a(p: 2): number;
+  public a(p: 1 | 2): boolean | number {
+    return '' as any;
+  }
+  public b(a: number): string;
+  protected c(b: number | 1): {
+    e: 1
+  }
+  protected get compileUtils() {
+    const abc = {
+      getConfig: (): ReadonlyDeep<InnerCompilerConfig> => {
+        return getCurrentCompileConfig() as any as unknown;
+      },
+      b(): void {}
+    }
+  }
+}
+  `);
+
+    analyzer.analyze();
+
+    expect(analyzer.analyzedTypes).toMatchObject([
+      { range: { pos: 11, end: 37 }, text: '  public a(p: 1): boolean;' },
+      { range: { pos: 38, end: 63 }, text: '  public a(p: 2): number;' },
+      { range: { pos: 76, end: 83 }, text: ': 1 | 2' },
+      { range: { pos: 84, end: 102 }, text: ': boolean | number' },
+      { range: { pos: 118, end: 125 }, text: ' as any' },
+      { range: { pos: 131, end: 161 }, text: '  public b(a: number): string;' },
+      {
+        range: { pos: 162, end: 206 },
+        text: '  protected c(b: number | 1): {\n    e: 1\n  }'
+      },
+      { range: { pos: 277, end: 312 }, text: ': ReadonlyDeep<InnerCompilerConfig>' },
+      { range: { pos: 358, end: 365 }, text: ' as any' },
+      { range: { pos: 365, end: 376 }, text: ' as unknown' },
+      { range: { pos: 396, end: 402 }, text: ': void' }
+    ]);
+  });
+
+  it('constructor', () => {
+    const analyzer = new TypeAnalyzer(`
+class A {
+  constructor(a: number) {}
+}
+  `);
+
+    analyzer.analyze();
+
+    expect(analyzer.analyzedTypes).toMatchObject([
+      { range: { pos: 26, end: 34 }, text: ': number' }
+    ]);
+  });
 });
