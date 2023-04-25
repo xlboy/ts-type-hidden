@@ -12,8 +12,8 @@ function b<A>(o: A): string;
     analyzer.analyze();
 
     expect(analyzer.analyzedTypes).toMatchObject([
-      { range: { pos: 12, end: 48 }, text: '\n\nfunction a<B extends 222>(): void;' },
-      { range: { pos: 48, end: 77 }, text: '\nfunction b<A>(o: A): string;' }
+      { range: { pos: 14, end: 48 }, text: 'function a<B extends 222>(): void;' },
+      { range: { pos: 49, end: 77 }, text: 'function b<A>(o: A): string;' }
     ]);
   });
 
@@ -66,7 +66,7 @@ const d = {
 
   describe('fn return type - ()`: number`', () => {
     it('normal', () => {
-      const analyzer = new TypeAnalyzer(`
+      const analyzer = new TypeAnalyzer(`n
 function a(): A111 {}
 const b = (): B111 => {};
 const c = function(): C111 {}
@@ -78,11 +78,11 @@ const d = {
       analyzer.analyze();
 
       expect(analyzer.analyzedTypes).toMatchObject([
-        { range: { pos: 13, end: 19 }, text: ': A111' },
-        { range: { pos: 35, end: 41 }, text: ': B111' },
-        { range: { pos: 69, end: 75 }, text: ': C111' },
-        { range: { pos: 96, end: 102 }, text: ': D111' },
-        { range: { pos: 113, end: 119 }, text: ': E111' }
+        { range: { pos: 14, end: 20 }, text: ': A111' },
+        { range: { pos: 36, end: 42 }, text: ': B111' },
+        { range: { pos: 70, end: 76 }, text: ': C111' },
+        { range: { pos: 97, end: 103 }, text: ': D111' },
+        { range: { pos: 114, end: 120 }, text: ': E111' }
       ]);
     });
 
@@ -126,10 +126,10 @@ interface A111 {
   analyzer.analyze();
 
   expect(analyzer.analyzedTypes).toMatchObject([
-    { range: { pos: 0, end: 15 }, text: '\ninterface t {}' },
+    { range: { pos: 1, end: 15 }, text: 'interface t {}' },
     {
-      range: { pos: 16, end: 81 },
-      text: '\ninterface A111 {\n  a: number;\n  b: string;\n  c: {\n    e: 1\n  }\n}'
+      range: { pos: 17, end: 81 },
+      text: 'interface A111 {\n  a: number;\n  b: string;\n  c: {\n    e: 1\n  }\n}'
     }
   ]);
 });
@@ -144,8 +144,8 @@ type A111  = {
   analyzer.analyze();
 
   expect(analyzer.analyzedTypes).toMatchObject([
-    { range: { pos: 0, end: 17 }, text: '\ntype t = number;' },
-    { range: { pos: 17, end: 58 }, text: '\ntype A111  = {\n  a: number;\n} | 123 & {}' }
+    { range: { pos: 1, end: 17 }, text: 'type t = number;' },
+    { range: { pos: 18, end: 58 }, text: 'type A111  = {\n  a: number;\n} | 123 & {}' }
   ]);
 });
 
@@ -160,7 +160,7 @@ const eee: null | string = ''
   analyzer.analyze();
 
   expect(analyzer.analyzedTypes).toMatchObject([
-    { range: { pos: 13, end: 49 }, text: '\ndeclare const b: number, c: string;' },
+    { range: { pos: 14, end: 49 }, text: 'declare const b: number, c: string;' },
     { range: { pos: 57, end: 65 }, text: ': number' },
     { range: { pos: 68, end: 76 }, text: ': string' },
     { range: { pos: 87, end: 102 }, text: ': null | string' }
@@ -182,14 +182,14 @@ declare module 'g' {}
   analyzer.analyze();
 
   expect(analyzer.analyzedTypes).toMatchObject([
-    { range: { pos: 0, end: 25 }, text: '\ndeclare const a: number;' },
-    { range: { pos: 25, end: 55 }, text: '\ndeclare function b(): number;' },
-    { range: { pos: 55, end: 74 }, text: '\ndeclare class c {}' },
-    { range: { pos: 74, end: 94 }, text: '\ndeclare module d {}' },
-    { range: { pos: 94, end: 117 }, text: '\ndeclare namespace e {}' },
-    { range: { pos: 117, end: 135 }, text: '\ndeclare enum f {}' },
-    { range: { pos: 135, end: 153 }, text: '\ndeclare global {}' },
-    { range: { pos: 153, end: 175 }, text: "\ndeclare module 'g' {}" }
+    { range: { pos: 1, end: 25 }, text: 'declare const a: number;' },
+    { range: { pos: 26, end: 55 }, text: 'declare function b(): number;' },
+    { range: { pos: 56, end: 74 }, text: 'declare class c {}' },
+    { range: { pos: 75, end: 94 }, text: 'declare module d {}' },
+    { range: { pos: 95, end: 117 }, text: 'declare namespace e {}' },
+    { range: { pos: 118, end: 135 }, text: 'declare enum f {}' },
+    { range: { pos: 136, end: 153 }, text: 'declare global {}' },
+    { range: { pos: 154, end: 175 }, text: "declare module 'g' {}" }
   ]);
 });
 

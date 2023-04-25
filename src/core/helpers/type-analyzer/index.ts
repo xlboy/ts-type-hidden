@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { log } from '../../log';
-import { functionsIn, isEqual } from 'lodash-es';
+import { isEqual } from 'lodash-es';
 
 export interface AnalyzedType {
   range: ts.TextRange;
@@ -23,24 +23,44 @@ export class TypeAnalyzer {
   }
 
   private cleanAnalyzedTypes() {
-    const toRemoveIndex = new Set<number>();
+    clearUselessTypes.call(this);
+    clearLineBreakOfStartOrEnd.call(this);
 
-    this.analyzedTypes.forEach((type, index) => {
-      if (toRemoveIndex.has(index)) return;
+    function clearLineBreakOfStartOrEnd(this: TypeAnalyzer) {
+      this.analyzedTypes.forEach(type => {
+        const oldTextLength = type.text.length;
 
-      this.analyzedTypes.forEach((_type, _index) => {
-        if (index === _index || toRemoveIndex.has(_index)) return;
+        type.text = type.text.replace(/^[\n]+/, '');
+        const startLineBreakCount = oldTextLength - type.text.length;
 
-        if (isEqual(_type, type)) return toRemoveIndex.add(index);
+        type.text = type.text.replace(/[\n]+$/, '');
+        const endLineBreakCount = oldTextLength - startLineBreakCount - type.text.length;
 
-        if (type.range.pos >= _type.range.pos) {
-          if (type.range.end < _type.range.end) toRemoveIndex.add(index);
-        }
+        type.range.pos += startLineBreakCount;
+        type.range.end -= endLineBreakCount;
       });
-    });
+    }
 
-    const sortedToRemoveIndex = Array.from(toRemoveIndex).sort((a, b) => b - a);
-    sortedToRemoveIndex.forEach(index => this.analyzedTypes.splice(index, 1));
+    // [1]. `declare const a: number`, [2]. `: number`. remove [2]
+    function clearUselessTypes(this: TypeAnalyzer) {
+      const toRemoveIndex = new Set<number>();
+      this.analyzedTypes.forEach((type, index) => {
+        if (toRemoveIndex.has(index)) return;
+
+        this.analyzedTypes.forEach((_type, _index) => {
+          if (index === _index || toRemoveIndex.has(_index)) return;
+
+          if (isEqual(_type, type)) return toRemoveIndex.add(index);
+
+          if (type.range.pos >= _type.range.pos) {
+            if (type.range.end < _type.range.end) toRemoveIndex.add(index);
+          }
+        });
+      });
+
+      const sortedToRemoveIndex = Array.from(toRemoveIndex).sort((a, b) => b - a);
+      sortedToRemoveIndex.forEach(index => this.analyzedTypes.splice(index, 1));
+    }
   }
 
   private visit(node: ts.Node, parent: ts.Node | null) {
