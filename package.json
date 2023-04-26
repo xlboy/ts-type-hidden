@@ -54,12 +54,12 @@
     ]
   },
   "scripts": {
-    "build": "tsup",
+    "build": "run-s type-check test && tsup",
     "dev": "tsup --watch src",
     "test": "vitest run",
     "type-check": "tsc",
-    "vsce-package": "tsx scripts/vsce-package",
-    "vsce-publish": "tsx scripts/vsce-package --publish"
+    "vsce-package": "run-s build && tsx scripts/vsce-package",
+    "vsce-publish": "run-s build && tsx scripts/vsce-package --publish"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.1",
