@@ -270,7 +270,7 @@ new Set<PersistListener<S>>()
   ]);
 });
 
-describe('class domain', () => {
+describe('class', () => {
   it('property declaration', () => {
     const analyzer = new TypeAnalyzer(`
 class A {
@@ -348,6 +348,55 @@ class A {
 
     expect(analyzer.analyzedTypes).toMatchObject([
       { range: { pos: 26, end: 34 }, text: ': number' }
+    ]);
+  });
+});
+
+describe('tsx', () => {
+  it('generic arguments', () => {
+    const analyzer = new TypeAnalyzer(
+      `
+  const a = <Component<number> />
+  const b = <A<number, string> />
+  const c = <A<number, string, null> />
+  const d = <A
+    <number, string, null, 1, 2 | 3, [22]>
+  />
+  `,
+      true
+    );
+
+    analyzer.analyze();
+
+    expect(analyzer.analyzedTypes).toMatchObject([
+      { range: { pos: 23, end: 31 }, text: '<number>' },
+      { range: { pos: 49, end: 65 }, text: '<number, string>' },
+      { range: { pos: 83, end: 105 }, text: '<number, string, null>' },
+      { range: { pos: 128, end: 166 }, text: '<number, string, null, 1, 2 | 3, [22]>' }
+    ]);
+  });
+
+  it('integration', () => {
+    const analyzer = new TypeAnalyzer(
+      `
+  const a = <Component<number>
+      name
+      test={111 as any}
+      t2={\`...\${11 as string}\`}
+      {...test as object}
+    />
+
+  `,
+      true
+    );
+
+    analyzer.analyze();
+
+    expect(analyzer.analyzedTypes).toMatchObject([
+      { range: { pos: 23, end: 31 }, text: '<number>' },
+      { range: { pos: 58, end: 65 }, text: ' as any' },
+      { range: { pos: 85, end: 95 }, text: ' as string' },
+      { range: { pos: 113, end: 123 }, text: ' as object' }
     ]);
   });
 });

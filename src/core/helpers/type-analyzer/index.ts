@@ -11,8 +11,14 @@ export class TypeAnalyzer {
   public sourceFile: ts.SourceFile;
   public analyzedTypes: AnalyzedType[] = [];
 
-  constructor(code: string) {
-    this.sourceFile = ts.createSourceFile('temp.ts', code, ts.ScriptTarget.Latest);
+  constructor(code: string, isTSX = false) {
+    this.sourceFile = ts.createSourceFile(
+      `temp.ts${isTSX ? 'x' : ''}`,
+      code,
+      ts.ScriptTarget.Latest,
+      true,
+      isTSX ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+    );
   }
 
   analyze() {
@@ -25,6 +31,8 @@ export class TypeAnalyzer {
   private cleanAnalyzedTypes() {
     clearUselessTypes.call(this);
     clearLineBreakOfStartOrEnd.call(this);
+
+    return;
 
     function clearLineBreakOfStartOrEnd(this: TypeAnalyzer) {
       this.analyzedTypes.forEach(type => {
@@ -107,6 +115,7 @@ export class TypeAnalyzer {
       [ts.SyntaxKind.CallExpression]: handleParentCallOrNewExpr.bind(this),
       [ts.SyntaxKind.NewExpression]: handleParentCallOrNewExpr.bind(this),
       [ts.SyntaxKind.PropertyDeclaration]: handleParentPropertyDeclaration.bind(this),
+      [ts.SyntaxKind.JsxSelfClosingElement]: handleParentJsxElement.bind(this)
     };
 
     const childNodeHandlers: NodeHandlers = {
@@ -134,7 +143,29 @@ export class TypeAnalyzer {
 
     return;
 
-    // [class-domain] context: `class A { a: number }`, get `number`
+    // [tsx] context: `<Component<number, string> .../>`, get `<number, string>`
+    function handleParentJsxElement(
+      this: TypeAnalyzer,
+      parent: ts.JsxSelfClosingElement,
+      curChild: ts.Node
+    ) {
+      if (parent.typeArguments && parent.typeArguments.length > 0) {
+        const children = parent.getChildren(this.sourceFile);
+        const startIndex = children.findIndex(
+          child => child.pos === parent.typeArguments![0].pos
+        );
+        const endIndex = children.findIndex(
+          child => child.pos === parent.typeArguments!.at(-1)!.end
+        );
+        // <
+        const prevNode = children[startIndex - 1];
+        // >
+        const nextNode = children[endIndex + 1];
+        return this.pushAnalyzedType(prevNode.end - 1, nextNode.pos);
+      }
+    }
+
+    // [class] context: `class A { a: number }`, get `number`
     function handleParentPropertyDeclaration(
       this: TypeAnalyzer,
       parent: ts.PropertyDeclaration,
