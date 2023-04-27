@@ -4,12 +4,11 @@
   "displayName": "TS Type Hidden",
   "version": "0.1.0",
   "private": true,
-  "description": "Hide TypeScript type in vscode",
+  "description": "Hide those familiar type codes! Get the snippet back to its simplest form!",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/xlboy/ts-type-hidden",
-    "directory": "packages/vscode"
+    "url": "https://github.com/xlboy/ts-type-hidden"
   },
   "categories": [],
   "main": "./dist/index.js",
@@ -28,18 +27,18 @@
   "contributes": {
     "commands": [
       {
-        "command": "ts-type-hidden.toggleHiddenMode",
+        "command": "ts-type-hidden.toogle",
         "title": "TS Type Hidden: Toggle Hidden Mode",
         "when": "resourceLangId == 'typescript' || resourceLangId == 'typescriptreact'"
       },
       {
-        "command": "ts-type-hidden.hideType",
-        "title": "TS Type Hidden: Hide Type",
+        "command": "ts-type-hidden.open",
+        "title": "TS Type Hidden: Open Hidden Mode",
         "when": "resourceLangId == 'typescript' || resourceLangId == 'typescriptreact'"
       },
       {
-        "command": "ts-type-hidden.showType",
-        "title": "TS Type Hidden: Show Type",
+        "command": "ts-type-hidden.close",
+        "title": "TS Type Hidden: Close Hidden Mode",
         "when": "resourceLangId == 'typescript' || resourceLangId == 'typescriptreact'"
       }
     ],

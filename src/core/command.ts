@@ -5,16 +5,16 @@ import { log } from './log';
 
 export function registerCommand(vscodeContext: vscode.ExtensionContext) {
   vscodeContext.subscriptions.push(
-    vscode.commands.registerCommand('ts-type-hidden.toggleHiddenMode', () => {
+    vscode.commands.registerCommand('ts-type-hidden.toogle', () => {
       EditorContext.i.toggleHiddenMode();
     }),
-    vscode.commands.registerCommand('ts-type-hidden.hideType', () => {
-      log.appendLine(`[command.hideType] Hide type`)
+    vscode.commands.registerCommand('ts-type-hidden.open', () => {
+      log.appendLine(`[command.open] Open hidden mode`)
       EditorContext.i.hideType(true);
     }),
 
-    vscode.commands.registerCommand('ts-type-hidden.showType', () => {
-      log.appendLine(`[command.showType] Show type`)
+    vscode.commands.registerCommand('ts-type-hidden.close', () => {
+      log.appendLine(`[command.close] Close hidden mode`)
       EditorContext.i.showType();
     })
   );

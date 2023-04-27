@@ -53,7 +53,7 @@ export class EditorContext {
     );
     this.isHiddenMode ? this.hideType(true) : this.showType();
     log.appendLine(
-      `[command.toggleHiddenMode] ${this.isHiddenMode ? 'Hide' : 'Show'} type`
+      `[command.toogle] ${this.isHiddenMode ? 'Hide' : 'Show'} type`
     );
   }
 
