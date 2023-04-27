@@ -1,5 +1,5 @@
 import type { ReadonlyDeep } from 'type-fest';
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 
 import { log } from './log';
 

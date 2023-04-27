@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { TypeAnalyzer, type AnalyzedType } from './helpers/type-analyzer';
 import { debounce, isEqual } from 'lodash-es';
 import { log } from './log';
@@ -53,7 +53,9 @@ export class EditorContext {
       (this.isHiddenMode = !this.isHiddenMode)
     );
     this.isHiddenMode ? this.hideType(true) : this.showType();
-    log.appendLine(`[command.toggleHiddenMode] ${this.isHiddenMode ? 'Hide' : 'Show'} type`);
+    log.appendLine(
+      `[command.toggleHiddenMode] ${this.isHiddenMode ? 'Hide' : 'Show'} type`
+    );
   }
 
   async hideType(needToFold = false) {
