@@ -4,7 +4,7 @@
   "displayName": "TS Type Hidden",
   "version": "0.1.0",
   "private": true,
-  "description": "Hide typescript type in vscode",
+  "description": "Hide TypeScript type in vscode",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -28,8 +28,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "ts-type-hidden.toggleHiddenType",
-        "title": "TS Type Hidden: Toggle Hidden Type",
+        "command": "ts-type-hidden.toggleHiddenMode",
+        "title": "TS Type Hidden: Toggle Hidden Mode",
         "when": "resourceLangId == 'typescript' || resourceLangId == 'typescriptreact'"
       }
     ],
@@ -46,7 +46,7 @@
     },
     "keybindings": [
       {
-        "command": "ts-type-hidden.toggleHiddenType",
+        "command": "ts-type-hidden.toggleHiddenMode",
         "key": "ctrl+shift+t",
         "mac": "cmd+shift+t",
         "when": "editorTextFocus && resourceLangId == 'typescript' || resourceLangId == 'typescriptreact'"
