@@ -37,7 +37,6 @@ export class EditorContext {
     })
   };
   private curFocusedTypes: AnalyzedType[] = [];
-  private hideTypeProcessing = false;
 
   private constructor(private readonly vscodeContext: vscode.ExtensionContext) {
     this.register();
@@ -58,9 +57,8 @@ export class EditorContext {
     );
   }
 
-  async hideType(needToFold = false) {
+  hideType(needToFold = false) {
     this.vscodeContext.globalState.update('isHiddenMode', (this.isHiddenMode = true));
-    this.hideTypeProcessing = true;
 
     const activeEditorWindow = vscode.window.activeTextEditor;
 
@@ -85,8 +83,6 @@ export class EditorContext {
       }
     }
 
-    this.hideTypeProcessing = false;
-
     return;
 
     async function handleMultiLineFold(
@@ -97,7 +93,7 @@ export class EditorContext {
       const curPos = activeEditorWindow.selection.active;
       activeEditorInfo.foldedTypeRanges = [];
 
-      for await (const type of activeEditorInfo.analyzedTypes) {
+      activeEditorInfo.analyzedTypes.forEach(type => {
         const typeRange = new vscode.Range(
           activeEditorWindow.document.positionAt(type.range.pos),
           activeEditorWindow.document.positionAt(type.range.end)
@@ -133,12 +129,10 @@ export class EditorContext {
               0
             );
             activeEditorInfo.foldedTypeRanges.push(lineToFold);
-            await vscode.commands.executeCommand(
-              'editor.createFoldingRangeFromSelection'
-            );
+            vscode.commands.executeCommand('editor.createFoldingRangeFromSelection');
           }
         }
-      }
+      });
 
       activeEditorWindow.selection = new vscode.Selection(curPos, curPos);
       activeEditorWindow.revealRange(
@@ -148,7 +142,7 @@ export class EditorContext {
     }
   }
 
-  async showType() {
+  showType() {
     this.vscodeContext.globalState.update('isHiddenMode', (this.isHiddenMode = false));
 
     const activeEditor = vscode.window.activeTextEditor;
@@ -160,10 +154,10 @@ export class EditorContext {
       if (curEditorInfo) {
         const curPos = activeEditor.selection.active;
 
-        for await (const range of curEditorInfo.foldedTypeRanges) {
+        curEditorInfo.foldedTypeRanges.forEach(range => {
           activeEditor.selection = new vscode.Selection(range.start, 0, range.end, 0);
-          await vscode.commands.executeCommand('editor.unfold');
-        }
+          vscode.commands.executeCommand('editor.unfold');
+        });
 
         activeEditor.selection = new vscode.Selection(curPos, curPos);
         activeEditor.revealRange(
@@ -213,10 +207,7 @@ export class EditorContext {
     );
 
     vscode.window.onDidChangeTextEditorSelection(event => {
-      if (
-        this.utils.isTargetDocument(event.textEditor.document) &&
-        !this.hideTypeProcessing
-      ) {
+      if (this.utils.isTargetDocument(event.textEditor.document)) {
         const curEditorInfo = this.editors.get(event.textEditor.document.fileName);
 
         if (curEditorInfo) {
