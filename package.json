@@ -57,7 +57,7 @@
     },
     "keybindings": [
       {
-        "command": "ts-type-hidden.toggleHiddenMode",
+        "command": "ts-type-hidden.toogle",
         "key": "ctrl+shift+t",
         "mac": "cmd+shift+t",
         "when": "editorTextFocus && resourceLangId == 'typescript' || resourceLangId == 'typescriptreact'"
