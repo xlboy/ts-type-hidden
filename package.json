@@ -2,7 +2,7 @@
   "name": "ts-type-hidden",
   "publisher": "xlboy",
   "displayName": "TS Type Hidden",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Hide those familiar type codes! Get the snippet back to its simplest form!",
   "license": "MIT",
