@@ -1,6 +1,5 @@
-import ts from 'typescript';
-import { log } from '../../log';
 import { isEqual } from 'lodash-es';
+import ts from 'typescript';
 
 export interface AnalyzedType {
   range: ts.TextRange;
@@ -129,17 +128,8 @@ export class TypeAnalyzer {
       [ts.SyntaxKind.SetAccessor]: handleChildGetOrSetAccessor.bind(this)
     };
 
-    if (parent.kind in parentNodeHandlers) {
-      parentNodeHandlers[parent.kind]!(parent, child);
-    } else {
-      console.error('[Error]: Unknown parent node kind: ' + parent.kind);
-    }
-
-    if (child.kind in childNodeHandlers) {
-      childNodeHandlers[child.kind]!(child);
-    } else {
-      console.error('[Error]: Unknown parent node kind: ' + parent.kind);
-    }
+    parentNodeHandlers[parent.kind]?.(parent, child);
+    childNodeHandlers[child.kind]?.(child);
 
     return;
 
