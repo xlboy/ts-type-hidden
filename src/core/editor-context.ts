@@ -1,10 +1,15 @@
 import * as vscode from 'vscode';
 import { TypeAnalyzer, type AnalyzedType } from './helpers/type-analyzer';
 import { debounce, isEqual } from 'lodash-es';
+import { log } from './log';
 
-interface FileInfo {
+type FoldingRange = Record<'start' | 'end', /* lineNumber */ number>;
+
+interface EditorInfo {
   code: string;
   analyzedTypes: AnalyzedType[];
+  isTSX: boolean;
+  foldedTypeRanges: FoldingRange[];
 }
 
 export class EditorContext {
@@ -22,7 +27,7 @@ export class EditorContext {
     EditorContext._instance = new EditorContext(vscodeContext);
   }
 
-  private files = new Map</* filePath */ string, FileInfo>();
+  private editors = new Map</* filePath */ string, EditorInfo>();
   private isHiddenMode = true;
   private readonly decorationType = {
     hidden: vscode.window.createTextEditorDecorationType({
@@ -39,93 +44,123 @@ export class EditorContext {
     this.initVisibleEditors();
 
     this.isHiddenMode = vscodeContext.globalState.get('isHiddenMode', true);
-
     if (this.isHiddenMode) this.hideType(true);
   }
 
-  toggleHiddenType() {
+  toggleHiddenMode() {
     this.isHiddenMode = !this.isHiddenMode;
     this.isHiddenMode ? this.hideType(true) : this.showType();
     this.vscodeContext.globalState.update('isHiddenMode', this.isHiddenMode);
+    log.appendLine(`[toggleHiddenMode] ${this.isHiddenMode ? 'Hide' : 'Show'} type`);
   }
 
-  private async hideType(isFirstActivate = false) {
-    const activeEditor = vscode.window.activeTextEditor;
-
+  private async hideType(isFirst = false) {
     this.hideTypeProcessing = true;
 
-    if (activeEditor && this.utils.isTargetDocument(activeEditor.document)) {
-      const editorInfo = this.files.get(activeEditor.document.fileName);
-      if (!editorInfo) return;
+    const activeEditorWindow = vscode.window.activeTextEditor;
+    if (activeEditorWindow && this.utils.isTargetDocument(activeEditorWindow.document)) {
+      const activeEditorInfo = this.editors.get(activeEditorWindow.document.fileName);
+      if (!activeEditorInfo) return;
 
-      const ranges = editorInfo.analyzedTypes
+      const rangesToHide = activeEditorInfo.analyzedTypes
         .filter(type => !this.curFocusedTypes.some(curFType => isEqual(type, curFType)))
         .map(
           type =>
             new vscode.Range(
-              activeEditor.document.positionAt(type.range.pos),
-              activeEditor.document.positionAt(type.range.end)
+              activeEditorWindow.document.positionAt(type.range.pos),
+              activeEditorWindow.document.positionAt(type.range.end)
             )
         );
 
-      activeEditor.setDecorations(this.decorationType.hidden, ranges);
+      activeEditorWindow.setDecorations(this.decorationType.hidden, rangesToHide);
 
-      if (isFirstActivate) {
-        // 记录当前光标所在的位置
-        const curPos = activeEditor.selection.active;
-        // 记录当前滚动条的位置
-        const curScrollPos = activeEditor.visibleRanges[0].start.line;
+      if (isFirst) {
+        const curPos = activeEditorWindow.selection.active;
+        activeEditorInfo.foldedTypeRanges = [];
 
-        for await (const type of editorInfo.analyzedTypes) {
-          const range = new vscode.Range(
-            activeEditor.document.positionAt(type.range.pos),
-            activeEditor.document.positionAt(type.range.end)
+        for await (const type of activeEditorInfo.analyzedTypes) {
+          const typeRange = new vscode.Range(
+            activeEditorWindow.document.positionAt(type.range.pos),
+            activeEditorWindow.document.positionAt(type.range.end)
           );
-          const text = activeEditor.document.getText(range);
-          const lineCount = text.split('\n').length;
+          const typeText = activeEditorWindow.document.getText(typeRange);
+          const typeLineCount = typeText.split('\n').length;
 
-          if (lineCount > 2) {
-            activeEditor.selection = new vscode.Selection(
-              range.start.line,
-              0,
-              range.end.line + 1,
-              0
-            );
-            await vscode.commands.executeCommand(
-              'editor.createFoldingRangeFromSelection'
-            );
+          if (typeLineCount > 2) {
+            const inFoldingRange = (() => {
+              const curFoldingRanges = this.utils.getActiveEditorFoldingRanges();
+
+              for (const curFRange of curFoldingRanges) {
+                if (
+                  curFRange.start <= typeRange.start.line &&
+                  curFRange.end >= typeRange.end.line
+                ) {
+                  return true;
+                }
+              }
+
+              return false;
+            })();
+
+            if (!inFoldingRange) {
+              const lineToFold = {
+                start: typeRange.start.line,
+                end: typeRange.end.line + 1
+              };
+              activeEditorWindow.selection = new vscode.Selection(
+                lineToFold.start,
+                0,
+                lineToFold.end,
+                0
+              );
+              activeEditorInfo.foldedTypeRanges.push(lineToFold);
+              await vscode.commands.executeCommand(
+                'editor.createFoldingRangeFromSelection'
+              );
+            }
           }
         }
 
-        activeEditor.selection = new vscode.Selection(curPos, curPos);
-        activeEditor.revealRange(new vscode.Range(curScrollPos, 0, curScrollPos, 0));
+        activeEditorWindow.selection = new vscode.Selection(curPos, curPos);
       }
     }
+
     this.hideTypeProcessing = false;
   }
 
-  private showType() {
+  private async showType() {
     const activeEditor = vscode.window.activeTextEditor;
 
     if (activeEditor && this.utils.isTargetDocument(activeEditor.document)) {
-      const editorInfo = this.files.get(activeEditor.document.fileName);
+      activeEditor.setDecorations(this.decorationType.hidden, []);
 
-      if (editorInfo) {
-        activeEditor.setDecorations(this.decorationType.hidden, []);
+      const curEditorInfo = this.editors.get(activeEditor.document.fileName);
+      if (curEditorInfo) {
+        const curPos = activeEditor.selection.active;
+
+        for await (const range of curEditorInfo.foldedTypeRanges) {
+          activeEditor.selection = new vscode.Selection(range.start, 0, range.end, 0);
+          await vscode.commands.executeCommand('editor.unfold');
+        }
+
+        activeEditor.selection = new vscode.Selection(curPos, curPos);
       }
     }
   }
 
   private register() {
     vscode.window.onDidChangeActiveTextEditor(editor => {
-      if (this.utils.isTargetDocument(editor!.document)) {
-        const filePath = editor!.document.fileName;
+      if (editor && this.utils.isTargetDocument(editor.document)) {
+        const filePath = editor.document.fileName;
 
-        if (!this.files.has(filePath)) {
-          const fileCode = editor!.document.getText();
-          this.files.set(filePath, {
+        if (!this.editors.has(filePath)) {
+          const fileCode = editor.document.getText();
+          const isTSX = editor.document.languageId === 'typescriptreact';
+          this.editors.set(filePath, {
             code: fileCode,
-            analyzedTypes: new TypeAnalyzer(fileCode).analyze()
+            analyzedTypes: new TypeAnalyzer(fileCode, isTSX).analyze(),
+            isTSX,
+            foldedTypeRanges: []
           });
         }
 
@@ -134,13 +169,16 @@ export class EditorContext {
     });
 
     vscode.workspace.onDidChangeTextDocument(
-      debounce(event => {
-        const editorInfo = this.files.get(event.document.fileName);
+      debounce<(event: vscode.TextDocumentChangeEvent) => void>(event => {
+        const curChangedEditorInfo = this.editors.get(event.document.fileName);
 
-        if (editorInfo) {
+        if (curChangedEditorInfo) {
           const newCode = event.document.getText();
-          editorInfo.code = newCode;
-          editorInfo.analyzedTypes = new TypeAnalyzer(newCode).analyze();
+          curChangedEditorInfo.code = newCode;
+          curChangedEditorInfo.analyzedTypes = new TypeAnalyzer(
+            newCode,
+            curChangedEditorInfo.isTSX
+          ).analyze();
 
           if (this.isHiddenMode) this.hideType();
         }
@@ -152,12 +190,12 @@ export class EditorContext {
         this.utils.isTargetDocument(event.textEditor.document) &&
         !this.hideTypeProcessing
       ) {
-        const editorInfo = this.files.get(event.textEditor.document.fileName);
+        const curEditorInfo = this.editors.get(event.textEditor.document.fileName);
 
-        if (editorInfo) {
+        if (curEditorInfo) {
           const cursorPos = event.selections[0].active;
           const cursorOffset = event.textEditor.document.offsetAt(cursorPos);
-          const cursorTypes = editorInfo.analyzedTypes.filter(type => {
+          const focusedTypes = curEditorInfo.analyzedTypes.filter(type => {
             const start = event.textEditor.document.positionAt(type.range.pos);
             return (
               cursorPos.line === start.line ||
@@ -165,8 +203,8 @@ export class EditorContext {
             );
           });
 
-          if (!isEqual(cursorTypes, this.curFocusedTypes)) {
-            this.curFocusedTypes = cursorTypes;
+          if (!isEqual(focusedTypes, this.curFocusedTypes)) {
+            this.curFocusedTypes = focusedTypes;
             if (this.isHiddenMode) this.hideType();
           }
         }
@@ -178,9 +216,12 @@ export class EditorContext {
     vscode.window.visibleTextEditors.forEach(editor => {
       if (this.utils.isTargetDocument(editor.document)) {
         const fileCode = editor.document.getText();
-        this.files.set(editor.document.fileName, {
+        const isTSX = editor.document.languageId === 'typescriptreact';
+        this.editors.set(editor.document.fileName, {
           code: fileCode,
-          analyzedTypes: new TypeAnalyzer(fileCode).analyze()
+          analyzedTypes: new TypeAnalyzer(fileCode, isTSX).analyze(),
+          isTSX,
+          foldedTypeRanges: []
         });
       }
     });
@@ -195,11 +236,23 @@ export class EditorContext {
         !document.fileName.endsWith('.d.ts')
       );
     },
-    getCurEditorFoldedRanges() {
+    getActiveEditorFoldingRanges(): FoldingRange[] {
       const activeEditor = vscode.window.activeTextEditor;
-      if (activeEditor) {
-      }
-      return [];
+      if (!activeEditor) return [];
+
+      const foldingRanges: FoldingRange[] = [];
+
+      // `[[0, 11], [25, 44]]`, get `[11, 25]`
+      activeEditor.visibleRanges.forEach((range, index, visibleRanges) => {
+        if (visibleRanges.length === 1 || index === visibleRanges.length - 1) return;
+
+        const endLine = range.end.line;
+        const nextStartLine = visibleRanges[index + 1]!.start.line;
+
+        foldingRanges.push({ start: endLine, end: nextStartLine });
+      });
+
+      return foldingRanges;
     }
   };
 }
