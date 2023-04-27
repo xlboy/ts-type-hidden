@@ -10,7 +10,9 @@
     "type": "git",
     "url": "https://github.com/xlboy/ts-type-hidden"
   },
-  "categories": [],
+  "categories": [
+    "Other"
+  ],
   "main": "./dist/index.js",
   "preview": true,
   "icon": "res/logo.png",
