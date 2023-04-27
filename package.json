@@ -31,6 +31,16 @@
         "command": "ts-type-hidden.toggleHiddenMode",
         "title": "TS Type Hidden: Toggle Hidden Mode",
         "when": "resourceLangId == 'typescript' || resourceLangId == 'typescriptreact'"
+      },
+      {
+        "command": "ts-type-hidden.hideType",
+        "title": "TS Type Hidden: Hide Type",
+        "when": "resourceLangId == 'typescript' || resourceLangId == 'typescriptreact'"
+      },
+      {
+        "command": "ts-type-hidden.showType",
+        "title": "TS Type Hidden: Show Type",
+        "when": "resourceLangId == 'typescript' || resourceLangId == 'typescriptreact'"
       }
     ],
     "configuration": {
