@@ -52,9 +52,7 @@ export class EditorContext {
       (this.isHiddenMode = !this.isHiddenMode)
     );
     this.isHiddenMode ? this.hideType(true) : this.showType();
-    log.appendLine(
-      `[command.toogle] ${this.isHiddenMode ? 'Hide' : 'Show'} type`
-    );
+    log.appendLine(`[command.toogle] ${this.isHiddenMode ? 'Hide' : 'Show'} type`);
   }
 
   hideType(needToFold = false) {
@@ -93,7 +91,7 @@ export class EditorContext {
       const curPos = activeEditorWindow.selection.active;
       activeEditorInfo.foldedTypeRanges = [];
 
-      activeEditorInfo.analyzedTypes.forEach(type => {
+      for await (const type of activeEditorInfo.analyzedTypes) {
         const typeRange = new vscode.Range(
           activeEditorWindow.document.positionAt(type.range.pos),
           activeEditorWindow.document.positionAt(type.range.end)
@@ -129,10 +127,12 @@ export class EditorContext {
               0
             );
             activeEditorInfo.foldedTypeRanges.push(lineToFold);
-            vscode.commands.executeCommand('editor.createFoldingRangeFromSelection');
+            await vscode.commands.executeCommand(
+              'editor.createFoldingRangeFromSelection'
+            );
           }
         }
-      });
+      }
 
       activeEditorWindow.selection = new vscode.Selection(curPos, curPos);
       activeEditorWindow.revealRange(
@@ -142,7 +142,7 @@ export class EditorContext {
     }
   }
 
-  showType() {
+  async showType() {
     this.vscodeContext.globalState.update('isHiddenMode', (this.isHiddenMode = false));
 
     const activeEditor = vscode.window.activeTextEditor;
@@ -154,10 +154,10 @@ export class EditorContext {
       if (curEditorInfo) {
         const curPos = activeEditor.selection.active;
 
-        curEditorInfo.foldedTypeRanges.forEach(range => {
+        for await (const range of curEditorInfo.foldedTypeRanges) {
           activeEditor.selection = new vscode.Selection(range.start, 0, range.end, 0);
-          vscode.commands.executeCommand('editor.unfold');
-        });
+          await vscode.commands.executeCommand('editor.unfold');
+        }
 
         activeEditor.selection = new vscode.Selection(curPos, curPos);
         activeEditor.revealRange(
