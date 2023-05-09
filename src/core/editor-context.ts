@@ -2,6 +2,7 @@ import vscode from 'vscode';
 import { TypeAnalyzer, type AnalyzedType } from './helpers/type-analyzer';
 import { debounce, isEqual } from 'lodash-es';
 import { log } from './log';
+import { GlobalState } from './global-state';
 
 type FoldingRange = Record<'start' | 'end', /* lineNumber */ number>;
 
@@ -23,12 +24,11 @@ export class EditorContext {
 
     return EditorContext._instance;
   }
-  public static init(vscodeContext: vscode.ExtensionContext) {
-    EditorContext._instance = new EditorContext(vscodeContext);
+  public static init() {
+    EditorContext._instance = new EditorContext();
   }
 
   private editors = new Map</* filePath */ string, EditorInfo>();
-  private isHiddenMode = true;
   private readonly decorationType = {
     hidden: vscode.window.createTextEditorDecorationType({
       textDecoration: 'opacity: 0; font-size: 0; display: none',
@@ -38,26 +38,14 @@ export class EditorContext {
   };
   private curFocusedTypes: AnalyzedType[] = [];
 
-  private constructor(private readonly vscodeContext: vscode.ExtensionContext) {
+  private constructor() {
     this.register();
     this.initVisibleEditors();
 
-    this.isHiddenMode = vscodeContext.globalState.get('isHiddenMode', true);
-    if (this.isHiddenMode) this.hideType(true);
-  }
-
-  toggleHiddenMode() {
-    this.vscodeContext.globalState.update(
-      'isHiddenMode',
-      (this.isHiddenMode = !this.isHiddenMode)
-    );
-    this.isHiddenMode ? this.hideType(true) : this.showType();
-    log.appendLine(`[command.toogle] ${this.isHiddenMode ? 'Hide' : 'Show'} type`);
+    if (GlobalState.i.isHiddenMode) this.hideType(true);
   }
 
   hideType(needToFold = false) {
-    this.vscodeContext.globalState.update('isHiddenMode', (this.isHiddenMode = true));
-
     const activeEditorWindow = vscode.window.activeTextEditor;
 
     if (activeEditorWindow && this.utils.isTargetDocument(activeEditorWindow.document)) {
@@ -143,8 +131,6 @@ export class EditorContext {
   }
 
   async showType() {
-    this.vscodeContext.globalState.update('isHiddenMode', (this.isHiddenMode = false));
-
     const activeEditor = vscode.window.activeTextEditor;
 
     if (activeEditor && this.utils.isTargetDocument(activeEditor.document)) {
@@ -185,7 +171,7 @@ export class EditorContext {
           });
         }
 
-        if (this.isHiddenMode) this.hideType(isFirstOpen);
+        if (GlobalState.i.isHiddenMode) this.hideType(isFirstOpen);
       }
     });
 
@@ -201,7 +187,7 @@ export class EditorContext {
             curChangedEditorInfo.isTSX
           ).analyze();
 
-          if (this.isHiddenMode) this.hideType();
+          if (GlobalState.i.isHiddenMode) this.hideType();
         }
       }, 1000)
     );
@@ -223,7 +209,7 @@ export class EditorContext {
 
           if (!isEqual(focusedTypes, this.curFocusedTypes)) {
             this.curFocusedTypes = focusedTypes;
-            if (this.isHiddenMode) this.hideType();
+            if (GlobalState.i.isHiddenMode) this.hideType();
           }
         }
       }

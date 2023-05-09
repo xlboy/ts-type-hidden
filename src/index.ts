@@ -5,6 +5,8 @@ import { registerCommand } from './core/command';
 import { Config } from './core/config';
 import { EditorContext } from './core/editor-context';
 import { log } from './core/log';
+import { StatusBar } from './core/status-bar';
+import { GlobalState } from './core/global-state';
 
 export function activate(vscodeContext: vscode.ExtensionContext) {
   log.appendLine(`TS Type Hidden for VS Code v${version}\n`);
@@ -14,6 +16,8 @@ export function activate(vscodeContext: vscode.ExtensionContext) {
     return;
   }
 
-  EditorContext.init(vscodeContext);
+  GlobalState.init(vscodeContext);
+  EditorContext.init();
+  StatusBar.init(vscodeContext);
   registerCommand(vscodeContext);
 }
