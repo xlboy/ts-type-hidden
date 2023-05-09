@@ -2,7 +2,7 @@
   "name": "ts-type-hidden",
   "publisher": "xlboy",
   "displayName": "TS Type Hidden",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "Hide those familiar type codes! Get the snippet back to its simplest form!",
   "license": "MIT",
@@ -14,7 +14,6 @@
     "Other"
   ],
   "main": "./dist/index.js",
-  "preview": true,
   "icon": "res/logo.png",
   "files": [
     "dist/**/*",

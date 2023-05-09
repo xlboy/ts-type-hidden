@@ -12,6 +12,7 @@ English | [简体中文](./README.zh.md)
 - Type code will be displayed when cursor active the line
 - There are small blue dots that means relative line exist hidden type code
 - Under hidden mode, Multi-line type code will be folded into one line
+- Status bar shows the current hidden mode status, click to toggle
 
 ## Commands
 
