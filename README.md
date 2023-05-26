@@ -4,7 +4,7 @@ Hide those familiar type codes! Get the snippet back to its simplest form!
 
 English | [简体中文](./README.zh.md)
 
-<img width="1422" alt="example" src="https://user-images.githubusercontent.com/63690944/233914174-a536689e-cd80-4d87-81d4-104160be7c5e.png">
+<img width="1422" alt="example" src="https://github.com/xlboy/ts-type-hidden/assets/63690944/b5842800-169e-491e-8cd2-5690caeb5990">
 
 ## Features
 
@@ -28,6 +28,8 @@ English | [简体中文](./README.zh.md)
 ## Settings
 
 - `ts-type-hidden.enable`: Enable the plugin or not
+
+- `ts-type-hidden.typeIconPath`: The path to the Icon file next to a line of type code(support `svg/png/jpg/jpeg/...` file format)
 
 ## CHANGELOG
 

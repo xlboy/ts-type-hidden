@@ -4,7 +4,7 @@
 
 [English](./README.md) | 简体中文
 
-<img width="1422" alt="example" src="https://user-images.githubusercontent.com/63690944/233914174-a536689e-cd80-4d87-81d4-104160be7c5e.png">
+<img width="1422" alt="example" src="https://github.com/xlboy/ts-type-hidden/assets/63690944/b5842800-169e-491e-8cd2-5690caeb5990">
 
 ---
 
@@ -30,6 +30,8 @@
 ## 设置
 
 - `ts-type-hidden.enable`: 是否启用插件
+
+- `ts-type-hidden.typeIconPath`: 类型代码行旁的图标文件路径（支持 `svg/png/jpg/jpeg/...` 文件格式）
 
 ## CHANGELOG
 
