@@ -51,6 +51,10 @@
           "type": "boolean",
           "default": true,
           "description": "Enable this extension"
+        },
+        "ts-type-hidden.typeIconPath": {
+          "type": "string",
+          "description": "The path to the Icon file next to a line of type code"
         }
       }
     },
