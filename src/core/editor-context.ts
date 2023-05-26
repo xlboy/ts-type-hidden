@@ -1,8 +1,10 @@
 import vscode from 'vscode';
 import { TypeAnalyzer, type AnalyzedType } from './helpers/type-analyzer';
 import { debounce, isEqual } from 'lodash-es';
-import { log } from './log';
 import { GlobalState } from './global-state';
+import { Config } from './config';
+import fs from 'fs-extra';
+import { log } from './log';
 
 type FoldingRange = Record<'start' | 'end', /* lineNumber */ number>;
 
@@ -29,18 +31,13 @@ export class EditorContext {
   }
 
   private editors = new Map</* filePath */ string, EditorInfo>();
-  private readonly decorationType = {
-    hidden: vscode.window.createTextEditorDecorationType({
-      textDecoration: 'opacity: 0; font-size: 0; display: none',
-      gutterIconPath: vscode.Uri.file(`${__dirname}/../res/col-icon.svg`),
-      gutterIconSize: 'contain'
-    })
-  };
   private curFocusedTypes: AnalyzedType[] = [];
 
   private constructor() {
     this.register();
     this.initVisibleEditors();
+    this.decoration.init();
+    Config.i.registerWatchCallback(this.decoration.refreshIcon);
 
     if (GlobalState.i.isHiddenMode) this.hideType(true);
   }
@@ -52,7 +49,7 @@ export class EditorContext {
       const activeEditorInfo = this.editors.get(activeEditorWindow.document.fileName);
       if (!activeEditorInfo) return;
 
-      const rangesToHide = activeEditorInfo.analyzedTypes
+      const typeRangesToHide = activeEditorInfo.analyzedTypes
         .filter(type => !this.curFocusedTypes.some(curFType => isEqual(type, curFType)))
         .map(
           type =>
@@ -62,7 +59,8 @@ export class EditorContext {
             )
         );
 
-      activeEditorWindow.setDecorations(this.decorationType.hidden, rangesToHide);
+      activeEditorWindow.setDecorations(this.decoration.get().hidden, typeRangesToHide);
+      activeEditorWindow.setDecorations(this.decoration.get().icon, typeRangesToHide);
 
       if (needToFold) {
         handleMultiLineFold.call(this, activeEditorWindow, activeEditorInfo);
@@ -134,7 +132,8 @@ export class EditorContext {
     const activeEditor = vscode.window.activeTextEditor;
 
     if (activeEditor && this.utils.isTargetDocument(activeEditor.document)) {
-      activeEditor.setDecorations(this.decorationType.hidden, []);
+      activeEditor.setDecorations(this.decoration.get().hidden, []);
+      activeEditor.setDecorations(this.decoration.get().icon, []);
 
       const curEditorInfo = this.editors.get(activeEditor.document.fileName);
       if (curEditorInfo) {
@@ -259,4 +258,30 @@ export class EditorContext {
       return foldingRanges;
     }
   };
+
+  private decoration = (() => {
+    let value: Record<'hidden' | 'icon', vscode.TextEditorDecorationType>;
+
+    const createIcon = () =>
+      vscode.window.createTextEditorDecorationType({
+        gutterIconPath: vscode.Uri.file(Config.i.get().typeIconPath),
+        gutterIconSize: 'contain'
+      });
+
+    return {
+      get: () => value,
+      refreshIcon() {
+        value.icon.dispose();
+        value.icon = createIcon();
+      },
+      init() {
+        value = {
+          hidden: vscode.window.createTextEditorDecorationType({
+            textDecoration: 'opacity: 0; font-size: 0; display: none'
+          }),
+          icon: createIcon()
+        };
+      }
+    };
+  })();
 }
