@@ -1,4 +1,4 @@
-# TS Type Hideen
+# TS Type Hidden
 
 Hide those familiar type codes! Get the snippet back to its simplest form!
 
