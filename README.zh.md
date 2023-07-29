@@ -1,4 +1,4 @@
-# TS Type Hideen
+# TS Type Hidden 
 
 将那些熟悉的类型代码隐藏起来吧！让代码片段回到最简洁的模样！
 
