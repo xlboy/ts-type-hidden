@@ -1,7 +1,9 @@
 import { isEqual } from 'lodash-es';
 import ts from 'typescript';
+import { TYPE_KIND } from './constants';
 
 export interface AnalyzedType {
+  kind: TYPE_KIND;
   range: ts.TextRange;
   text: string;
 }
@@ -50,23 +52,23 @@ export class TypeAnalyzer {
 
     // [1]. `declare const a: number`, [2]. `: number`. remove [2]
     function clearUselessTypes(this: TypeAnalyzer) {
-      const toRemoveIndex = new Set<number>();
+      const indexsToRemove = new Set<number>();
       this.analyzedTypes.forEach((type, index) => {
-        if (toRemoveIndex.has(index)) return;
+        if (indexsToRemove.has(index)) return;
 
         this.analyzedTypes.forEach((_type, _index) => {
-          if (index === _index || toRemoveIndex.has(_index)) return;
+          if (index === _index || indexsToRemove.has(_index)) return;
 
-          if (isEqual(_type, type)) return toRemoveIndex.add(index);
+          if (isEqual(_type, type)) return indexsToRemove.add(index);
 
           if (type.range.pos >= _type.range.pos) {
-            if (type.range.end < _type.range.end) toRemoveIndex.add(index);
+            if (type.range.end < _type.range.end) indexsToRemove.add(index);
           }
         });
       });
 
-      const sortedToRemoveIndex = Array.from(toRemoveIndex).sort((a, b) => b - a);
-      sortedToRemoveIndex.forEach(index => this.analyzedTypes.splice(index, 1));
+      const sortedToRemoveIndexs = Array.from(indexsToRemove).sort((a, b) => b - a);
+      sortedToRemoveIndexs.forEach(index => this.analyzedTypes.splice(index, 1));
     }
   }
 
@@ -151,7 +153,10 @@ export class TypeAnalyzer {
         const prevNode = children[startIndex - 1];
         // >
         const nextNode = children[endIndex + 1];
-        return this.pushAnalyzedType(prevNode.end - 1, nextNode.pos);
+        return this.pushAnalyzedType(TYPE_KIND.TSX_COMPONENT_GENERIC, [
+          prevNode.end - 1,
+          nextNode.pos
+        ]);
       }
     }
 
@@ -166,7 +171,10 @@ export class TypeAnalyzer {
         const startIndex = children.findIndex(child => child.pos === parent.type!.pos);
         // :
         const prevNode = children[startIndex - 1];
-        return this.pushAnalyzedType(prevNode.end - 1, parent.type!.end);
+        return this.pushAnalyzedType(TYPE_KIND.CLASS_PROPERTY_DECLARATION_TYPE, [
+          prevNode.end - 1,
+          parent.type!.end
+        ]);
       }
     }
 
@@ -189,7 +197,10 @@ export class TypeAnalyzer {
         const prevNode = children[startIndex - 1];
         // >
         const nextNode = children[endIndex + 1];
-        return this.pushAnalyzedType(prevNode.end - 1, nextNode.pos + 1);
+        return this.pushAnalyzedType(TYPE_KIND.FUNCTION_CALL_GENERIC, [
+          prevNode.end - 1,
+          nextNode.pos + 1
+        ]);
       }
     }
 
@@ -208,7 +219,10 @@ export class TypeAnalyzer {
       // >
       const nextNode = children[index + 1];
 
-      return this.pushAnalyzedType(prevNode.end - 1, nextNode.pos + 1);
+      return this.pushAnalyzedType(TYPE_KIND.ANGLE_BRACKETS_TYPE_ASSERTION, [
+        prevNode.end - 1,
+        nextNode.pos + 1
+      ]);
     }
 
     // context = `a as number` | `a satisfies number`, curChild = `number`
@@ -223,8 +237,12 @@ export class TypeAnalyzer {
       );
       // as, satisfies
       const prevNode = children[index - 1];
+      const kind =
+        prevNode.kind === ts.SyntaxKind.AsKeyword
+          ? TYPE_KIND.AS_EXPRESSION
+          : TYPE_KIND.SATISFIES_EXPRESSION;
 
-      return this.pushAnalyzedType(prevNode.pos, curChild.end);
+      return this.pushAnalyzedType(kind, [prevNode.pos, curChild.end]);
     }
 
     // VariableStatement, ClassDeclaration, ModuleDeclaration, EnumDeclaration
@@ -241,7 +259,7 @@ export class TypeAnalyzer {
       );
 
       if (hasDeclareKeyword) {
-        this.pushAnalyzedType(child.pos, child.end);
+        this.pushAnalyzedType(TYPE_KIND.DECLARE_STATEMENT, [child.pos, child.end]);
       } else {
         ts.forEachChild(child, _child => this.visit(_child, child));
       }
@@ -259,7 +277,10 @@ export class TypeAnalyzer {
       );
       // :
       const prevNode = children[index - 1];
-      this.pushAnalyzedType(prevNode.end - 1, curChild.end);
+      this.pushAnalyzedType(TYPE_KIND.VARIABLE_TYPE_DECLARATION, [
+        prevNode.end - 1,
+        curChild.end
+      ]);
     }
 
     function handleChildGetOrSetAccessor(
@@ -271,9 +292,13 @@ export class TypeAnalyzer {
 
     function handleChildInterfaceOrTypeAlias(
       this: TypeAnalyzer,
-      child: ts.InterfaceDeclaration
+      child: ts.InterfaceDeclaration | ts.TypeAliasDeclaration
     ) {
-      this.pushAnalyzedType(child.pos, child.end);
+      const kind =
+        child.kind === ts.SyntaxKind.InterfaceDeclaration
+          ? TYPE_KIND.INTERFACE
+          : TYPE_KIND.TYPE_ALIAS;
+      this.pushAnalyzedType(kind, [child.pos, child.end]);
     }
 
     // context = `a: number`, curChild = `number`
@@ -292,10 +317,10 @@ export class TypeAnalyzer {
       const optionalToken = children[index - 2];
       const isOptionalToken = optionalToken.kind === ts.SyntaxKind.QuestionToken;
 
-      this.pushAnalyzedType(
+      this.pushAnalyzedType(TYPE_KIND.FUNCTION_PARAMETER, [
         isOptionalToken ? optionalToken.pos : prevNode.pos,
         curChild.end
-      );
+      ]);
     }
 
     // FunctionDeclaration | MethodDeclaration | FunctionExpression
@@ -304,6 +329,16 @@ export class TypeAnalyzer {
       parent: ts.FunctionDeclaration | ts.MethodDeclaration | ts.FunctionExpression,
       curChild: ts.Node
     ) {
+      const hasDeclareKeyword = parent.modifiers?.some(
+        modifier => modifier.kind === ts.SyntaxKind.DeclareKeyword
+      );
+      if (hasDeclareKeyword) {
+        return this.pushAnalyzedType(TYPE_KIND.DECLARE_STATEMENT, [
+          parent.pos,
+          parent.end
+        ]);
+      }
+
       // function a<B extends 222>(test: ...): void;
       const isOverload = parent.body === undefined;
       if (isOverload) {
@@ -313,9 +348,15 @@ export class TypeAnalyzer {
           if (parent.modifiers && parent.modifiers.length > 0) {
             startPos = parent.modifiers[0].pos;
           }
-          return this.pushAnalyzedType(startPos, parent.end);
+          return this.pushAnalyzedType(TYPE_KIND.FUNCTION_OVERLOAD, [
+            startPos,
+            parent.end
+          ]);
         } else {
-          return this.pushAnalyzedType(parent.pos, parent.end);
+          return this.pushAnalyzedType(TYPE_KIND.FUNCTION_OVERLOAD, [
+            parent.pos,
+            parent.end
+          ]);
         }
       }
 
@@ -337,27 +378,40 @@ export class TypeAnalyzer {
         const prevNode = children[startIndex - 1];
         // >
         const nextNode = children[endIndex + 1];
-        return this.pushAnalyzedType(prevNode.end - 1, nextNode.pos + 1);
+        return this.pushAnalyzedType(TYPE_KIND.FUNCTION_GENERIC_DEFINITION, [
+          prevNode.end - 1,
+          nextNode.pos + 1
+        ]);
       }
 
       if (ts.isTypePredicateNode(curChild)) {
         // children[index], node = x is any
         // :
         const prevNode = children[index - 1];
-        return this.pushAnalyzedType(prevNode.end - 1, curChild.end);
+        return this.pushAnalyzedType(TYPE_KIND.FUNCTION_TYPE_PREDICATE, [
+          prevNode.end - 1,
+          curChild.end
+        ]);
       }
 
       if (parent.type === curChild) {
         // children[index], node = function return type
         // :
         const prevNode = children[index - 1];
-        return this.pushAnalyzedType(prevNode.end - 1, curChild.end);
+        return this.pushAnalyzedType(TYPE_KIND.FUNCTION_RETURN, [
+          prevNode.end - 1,
+          curChild.end
+        ]);
       }
     }
   }
 
-  private pushAnalyzedType(pos: number, end: number) {
+  private pushAnalyzedType(
+    kind: AnalyzedType['kind'],
+    range: [pos: number, end: number]
+  ) {
+    const [pos, end] = range;
     const text = this.sourceFile.text.slice(pos, end);
-    this.analyzedTypes.push({ range: { pos, end }, text });
+    this.analyzedTypes.push({ kind, range: { pos, end }, text });
   }
 }
