@@ -62,7 +62,12 @@ export class EditorContext {
       activeEditorWindow.setDecorations(this.decoration.get().icon, typeRangesToHide);
 
       if (needToFold) {
-        handleMultiLineFold.call(this, activeEditorWindow, activeEditorInfo);
+        setTimeout(() => {
+          handleMultiLineFold.call(this, activeEditorWindow, activeEditorInfo);
+        }, 200);
+        // Q：↑为什么需要 200ms 延时？
+        // A：在初次打开文件时，执行了相关代码后走到此方法内时，获取到的 `currentCursorPos` 是不正确的“头位置”
+        // A：为什么是头位置？猜测是未初始化好等原因，因而没能及时将光标位置同步到 `selection.active` 中…
       }
     }
 
@@ -73,10 +78,11 @@ export class EditorContext {
       activeEditorWindow: vscode.TextEditor,
       activeEditorInfo: EditorInfo
     ) {
-      const curPos = activeEditorWindow.selection.active;
+      const currentCursorPos = activeEditorWindow.selection.active;
       const filteredAnalyzedTypes = activeEditorInfo.analyzedTypes.filter(
         type => !Config.i.get().ignoreTypeKinds.includes(type.kind)
       );
+      let foldedCount = 0;
       activeEditorInfo.foldedTypeRanges = [];
 
       for await (const type of filteredAnalyzedTypes) {
@@ -104,6 +110,7 @@ export class EditorContext {
           })();
 
           if (!inFoldingRange) {
+            foldedCount++;
             const lineToFold = {
               start: typeRange.start.line,
               end: typeRange.end.line + 1
@@ -122,11 +129,16 @@ export class EditorContext {
         }
       }
 
-      activeEditorWindow.selection = new vscode.Selection(curPos, curPos);
-      activeEditorWindow.revealRange(
-        new vscode.Range(curPos.line, 0, curPos.line, 0),
-        vscode.TextEditorRevealType.InCenter
-      );
+      if (foldedCount > 0) {
+        activeEditorWindow.selection = new vscode.Selection(
+          currentCursorPos,
+          currentCursorPos
+        );
+        activeEditorWindow.revealRange(
+          new vscode.Range(currentCursorPos.line, 0, currentCursorPos.line, 0),
+          vscode.TextEditorRevealType.InCenter
+        );
+      }
     }
   }
 
@@ -258,6 +270,21 @@ export class EditorContext {
       });
 
       return foldingRanges;
+    },
+    setCursorToSpecifiedLocation(line: number, column: number) {
+      vscode.commands
+        .executeCommand('cursorMove', {
+          to: 'down',
+          by: 'line',
+          value: line
+        })
+        .then(() =>
+          vscode.commands.executeCommand('cursorMove', {
+            to: 'right',
+            by: 'character',
+            value: column
+          })
+        );
     }
   };
 
