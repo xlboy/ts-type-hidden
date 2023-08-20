@@ -3,8 +3,6 @@ import { TypeAnalyzer, type AnalyzedType } from './helpers/type-analyzer';
 import { debounce, isEqual } from 'lodash-es';
 import { GlobalState } from './global-state';
 import { Config } from './config';
-import fs from 'fs-extra';
-import { log } from './log';
 
 type FoldingRange = Record<'start' | 'end', /* lineNumber */ number>;
 
@@ -49,15 +47,16 @@ export class EditorContext {
       const activeEditorInfo = this.editors.get(activeEditorWindow.document.fileName);
       if (!activeEditorInfo) return;
 
-      const typeRangesToHide = activeEditorInfo.analyzedTypes
-        .filter(type => !this.curFocusedTypes.some(curFType => isEqual(type, curFType)))
-        .map(
-          type =>
-            new vscode.Range(
-              activeEditorWindow.document.positionAt(type.range.pos),
-              activeEditorWindow.document.positionAt(type.range.end)
-            )
-        );
+      const filteredAnalyzedTypes = activeEditorInfo.analyzedTypes
+        .filter(type => !Config.i.get().ignoreTypeKinds.includes(type.kind))
+        .filter(type => !this.curFocusedTypes.some(curFType => isEqual(type, curFType)));
+      const typeRangesToHide = filteredAnalyzedTypes.map(
+        type =>
+          new vscode.Range(
+            activeEditorWindow.document.positionAt(type.range.pos),
+            activeEditorWindow.document.positionAt(type.range.end)
+          )
+      );
 
       activeEditorWindow.setDecorations(this.decoration.get().hidden, typeRangesToHide);
       activeEditorWindow.setDecorations(this.decoration.get().icon, typeRangesToHide);
@@ -75,9 +74,12 @@ export class EditorContext {
       activeEditorInfo: EditorInfo
     ) {
       const curPos = activeEditorWindow.selection.active;
+      const filteredAnalyzedTypes = activeEditorInfo.analyzedTypes.filter(
+        type => !Config.i.get().ignoreTypeKinds.includes(type.kind)
+      );
       activeEditorInfo.foldedTypeRanges = [];
 
-      for await (const type of activeEditorInfo.analyzedTypes) {
+      for await (const type of filteredAnalyzedTypes) {
         const typeRange = new vscode.Range(
           activeEditorWindow.document.positionAt(type.range.pos),
           activeEditorWindow.document.positionAt(type.range.end)
