@@ -3,16 +3,15 @@ import vscode from 'vscode';
 import fs from 'fs-extra';
 
 import { log } from './log';
+import { TYPE_KIND } from './helpers/type-analyzer/constants';
 
 interface ExtensionConfig {
-  /**
-   * @default true
-   */
+  /** @default true */
   enabled: boolean;
-  /**
-   * @default `{$ExtensionRootPath}/res/type-icon.png`
-   */
+  /** @default `{$ExtensionRootPath}/res/type-icon.png` */
   typeIconPath: string;
+  /** @default [] */
+  ignoreTypeKinds: TYPE_KIND[];
 }
 
 const defaultTypeIconPath = `${__dirname}/../res/type-icon.png`;
@@ -33,7 +32,8 @@ export class Config {
 
     this.config = {
       enabled: config.get('enabled', true),
-      typeIconPath: config.get('typeIconPath') || defaultTypeIconPath
+      typeIconPath: config.get('typeIconPath') || defaultTypeIconPath,
+      ignoreTypeKinds: config.get('ignoreTypeKinds', [])
     } satisfies ExtensionConfig;
   }
 
@@ -59,8 +59,21 @@ ${JSON.stringify(this.config, null, 2)}
 
   private verify() {
     if (!fs.existsSync(this.config.typeIconPath)) {
-      vscode.window.showErrorMessage('`typeIconPath` is not a valid path');
+      vscode.window.showErrorMessage(
+        '[ts-type-hidden configuration]: \n`typeIconPath` is not a valid path'
+      );
       this.config.typeIconPath = defaultTypeIconPath;
+    }
+
+    for (let i = this.config.ignoreTypeKinds.length - 1; i >= 0; i--) {
+      const typeKindToIgnore = this.config.ignoreTypeKinds[i];
+      const isInvalid = !Object.values(TYPE_KIND).includes(typeKindToIgnore);
+      if (isInvalid) {
+        this.config.ignoreTypeKinds.splice(i, 1);
+        vscode.window.showErrorMessage(
+          `[ts-type-hidden configuration]: \n\`ignoreTypeKinds.${typeKindToIgnore}\` is not a valid value`
+        );
+      }
     }
   }
 
