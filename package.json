@@ -20,8 +20,10 @@
     "res/**/*"
   ],
   "engines": {
-    "vscode": "^1.70.0"
+    "vscode": "^1.70.0",
+    "node": ">=17.0.0"
   },
+  "packageManager": ">=pnpm@8.5.0",
   "activationEvents": [
     "onStartupFinished"
   ],
