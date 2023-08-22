@@ -1,3 +1,11 @@
+# 0.4.0 (2023-08-22)
+
+- feat: support for ignoring specified type kinds when hiding (#5)
+
+- fix(editor-context): fix inaccurate cursor when opening a new file
+
+- fix(editor-context): type flicker problem when editing current line code
+
 # 0.3.0 (2023-05-27)
 
 - refactor: improve the icon next to the line of type code
