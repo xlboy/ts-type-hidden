@@ -20,8 +20,10 @@
     "res/**/*"
   ],
   "engines": {
-    "vscode": "^1.70.0"
+    "vscode": "^1.70.0",
+    "node": ">=17.0.0"
   },
+  "packageManager": ">=pnpm@8.5.0",
   "activationEvents": [
     "onStartupFinished"
   ],
@@ -55,6 +57,48 @@
         "ts-type-hidden.typeIconPath": {
           "type": "string",
           "description": "The path to the Icon file next to a line of type code"
+        },
+        "ts-type-hidden.ignoreTypeKinds": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string",
+            "enum": [
+              "type-alias",
+              "interface",
+              "function-overload",
+              "function-return",
+              "function-type-predicate",
+              "function-parameter",
+              "function-generic-definition",
+              "function-call-generic",
+              "tsx-component-generic",
+              "class-property-type-definition",
+              "angle-brackets-assertion",
+              "as-assertion",
+              "satisfies-operator",
+              "declare-statement",
+              "variable-type-definition"
+            ],
+            "markdownEnumDescriptions": [
+              "```ts \ntype A  = ({ ... } & { ... }) | string[] \n```\n ⏭️  `type A = ({ ... } & { ... }) | string[]`",
+              "```ts \ninterface A { ... } \n```\n ⏭️  `interface A { ... }`",
+              "```ts \nfunction fn(a: number): number[];\nfunction fn(a: number[], opts: { ... }): number[]; \n```\n ⏭️  `function fn(a: number): number[];`\n\n ⏭️ `function fn(a: number[], opts: { ... }): number[];`",
+              "```ts \nfunction fn(): number {};\n``` \n ⏭️  `: number`",
+              "```ts \nfunction fn(a: any): a is number {};\n```\n ⏭️  `: a is number`",
+              "```ts \nfunction fn<A extends string>(a: A, b: number) {};\n``` \n ⏭️  `: A` \n\n ⏭️  `: number`",
+              "```ts \nfunction fn<A extends string, B = [A, '']>() {};\n``` \n ⏭️  `<A extends string, B = [A, '']>`",
+              "```ts \nconst name = get<UserModule>(userModule, 'info.name');\nconst userModel = new UserModel<UserEntity>({ ... }); \n``` \n ⏭️  `<UserModule>`\n\n ⏭️  `<UserEntity>`",
+              "```ts \nconst EditUserForm = <ProForm<UserModel> id={userId} />;\n```\n ⏭️  `<UserModel>`",
+              "```ts \nclass A {\n  public size?: number;\n  private setSize!: Function = () => {}\n}\n```\n ⏭️  `?: number` \n\n ⏭️  `!: Function`",
+              "```ts \nconst num: any = 77;\nconst num1 = (<number>num).toFixed(2);\n``` \n ⏭️  `<number>`",
+              "```ts \nfn() as any;\n``` \n ⏭️  ` as any`",
+              "```ts \nconst user = { ... } satisfies UserModel;\n``` \n ⏭️  ` satisfies UserModel`",
+              "```ts \ndeclare const a: number;\ndeclare function b(): number;\ndeclare class c {}\ndeclare module d {}\ndeclare namespace e {}\ndeclare enum f {}\ndeclare global {}\ndeclare module 'g' {}\n``` \n ⏭️ 👆 All statements that begin with `declare`",
+              "```ts \nconst a: number = 1;\n``` \n ⏭️  `: number`"
+            ]
+          },
+          "description": "Type kind to ignore when hiding"
         }
       }
     },
@@ -92,7 +136,7 @@
     "tsup": "^6.6.3",
     "tsx": "^3.12.7",
     "type-fest": "^3.8.0",
-    "typescript": "^5.0.4",
+    "typescript": "^5.1.6",
     "vite": "^4.3.1",
     "vitest": "^0.28.4",
     "vsce": "^2.15.0"

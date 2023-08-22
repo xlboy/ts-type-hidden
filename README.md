@@ -9,6 +9,7 @@ English | [简体中文](./README.zh.md)
 ## Features
 
 - One-click **hide/show** type code
+- Customize the type kinds that need to be hidden (`interface`, `type-alias`, ...)
 - Type code will be displayed when cursor active the line
 - There are small blue dots that means relative line exist hidden type code
 - Under hidden mode, Multi-line type code will be folded into one line
@@ -30,6 +31,128 @@ English | [简体中文](./README.zh.md)
 - `ts-type-hidden.enable`: Enable the plugin or not
 
 - `ts-type-hidden.typeIconPath`: The path to the Icon file next to a line of type code(support `svg/png/jpg/jpeg/...` file format)
+
+- `ts-type-hidden.ignoreTypeKinds`: Type kinds that do not need to be hidden👇
+
+  <details>
+  <summary>View example</summary><br>
+  <video src="https://github.com/xlboy/ts-type-hidden/assets/63690944/2e8da4d0-360c-44c9-8059-252eb7829da8" />
+  </details>
+
+  <details>
+  <summary>View configuration options</summary>
+
+  - `type-alias`:
+    ```ts                                        
+    type A  = ({ ... } & { ... }) | string[]
+    ```
+    ⏭️  `type A = ({ ... } & { ... }) | string[]` 
+
+  - `interface`:
+    ```ts                    
+    interface A { ... }
+    ```
+    ⏭️  `interface A { ... }` 
+
+  - `function-overload`:
+    ```ts 
+    function fn(a: number): number[];
+    function fn(a: number[], opts: { ... }): number[];
+    ```
+    ⏭️  `function fn(a: number): number[];`
+
+    ⏭️  `function fn(a: number[], opts: { ... }): number[];`
+
+  - `function-return`:
+    ```ts 
+    function fn(): number {}
+    ```
+    ⏭️  `: number`
+
+  - `function-type-predicate`:
+    ```ts 
+    function fn(a: any): a is number {}
+    ```
+    ⏭️  `: a is number`
+
+  - `function-parameter`:
+    ```ts 
+    function fn<A extends string>(a: A, b: number) {}
+    ```
+    ⏭️  `: A`
+
+    ⏭️  `: number`
+
+  - `function-generic-definition`:
+    ```ts 
+    function fn<A extends string, B = [A, '']>() {}
+    ```
+    ⏭️  `<A extends string, B = [A, '']>`
+
+  - `function-call-generic`:
+    ```ts 
+    const name = get<UserModule>(userModule, 'info.name');
+    const userModel = new UserModel<UserEntity>({ ... });
+    ```
+    ⏭️  `<UserModule>`
+
+    ⏭️  `<UserEntity>`
+
+  - `tsx-component-generic`:
+    ```ts 
+    const EditUserForm = <ProForm<UserModel> id={userId} />;
+    ```
+    ⏭️  `<UserModel>`
+
+  - `variable-type-definition`:
+    ```ts 
+    const a: number = 1;
+    ```
+    ⏭️  `: number`
+
+  - `class-property-type-definition`:
+    ```ts 
+    class A {
+      public size?: number;
+      private setSize!: Function = () => {}
+    }
+    ```
+    ⏭️  `?: number`
+
+    ⏭️  `!: Function`
+
+  - `angle-brackets-assertion`:
+    ```ts 
+    const num: any = 77;
+    const num1 = (<number>num).toFixed(2);
+    ```
+    ⏭️  `<number>`
+
+  - `as-assertion`:
+    ```ts
+    fn() as any;
+    ```
+    ⏭️  ` as any`
+
+  - `satisfies-operator`:
+    ```ts
+    const user = { ... } satisfies UserModel;
+    ```
+    ⏭️  ` satisfies UserModel`
+
+  - `declare-statement`:
+    ```ts
+    declare const a: number;
+    declare function b(): number;
+    declare class c {}
+    declare module d {}
+    declare namespace e {}
+    declare enum f {}
+    declare global {}
+    declare module 'g' {}
+    ```
+    ⏭️ 👆All statements that begin with `declare`
+  </details>
 
 ## CHANGELOG
 
