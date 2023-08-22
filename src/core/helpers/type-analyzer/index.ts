@@ -171,7 +171,7 @@ export class TypeAnalyzer {
         const startIndex = children.findIndex(child => child.pos === parent.type!.pos);
         // :
         const prevNode = children[startIndex - 1];
-        return this.pushAnalyzedType(TYPE_KIND.CLASS_PROPERTY_DECLARATION_TYPE, [
+        return this.pushAnalyzedType(TYPE_KIND.CLASS_PROPERTY_TYPE_DEFINITION, [
           prevNode.end - 1,
           parent.type!.end
         ]);
@@ -219,7 +219,7 @@ export class TypeAnalyzer {
       // >
       const nextNode = children[index + 1];
 
-      return this.pushAnalyzedType(TYPE_KIND.ANGLE_BRACKETS_TYPE_ASSERTION, [
+      return this.pushAnalyzedType(TYPE_KIND.ANGLE_BRACKETS_ASSERTION, [
         prevNode.end - 1,
         nextNode.pos + 1
       ]);
@@ -239,8 +239,8 @@ export class TypeAnalyzer {
       const prevNode = children[index - 1];
       const kind =
         prevNode.kind === ts.SyntaxKind.AsKeyword
-          ? TYPE_KIND.AS_EXPRESSION
-          : TYPE_KIND.SATISFIES_EXPRESSION;
+          ? TYPE_KIND.AS_ASSERTION
+          : TYPE_KIND.SATISFIES_OPERATOR;
 
       return this.pushAnalyzedType(kind, [prevNode.pos, curChild.end]);
     }
@@ -277,7 +277,7 @@ export class TypeAnalyzer {
       );
       // :
       const prevNode = children[index - 1];
-      this.pushAnalyzedType(TYPE_KIND.VARIABLE_TYPE_DECLARATION, [
+      this.pushAnalyzedType(TYPE_KIND.VARIABLE_TYPE_DEFINITION, [
         prevNode.end - 1,
         curChild.end
       ]);

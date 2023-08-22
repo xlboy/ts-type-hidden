@@ -77,6 +77,14 @@ export enum TYPE_KIND {
 
   /**
    * ```ts
+   * const a: number = 1;
+   * ```
+   * ⏭️  `: number`
+   */
+  VARIABLE_TYPE_DEFINITION = 'variable-type-definition',
+
+  /**
+   * ```ts
    * class A {
    *   public size?: number;
    *   private setSize!: Function = () => {}
@@ -86,7 +94,7 @@ export enum TYPE_KIND {
    *
    * ⏭️  `!: Function`
    */
-  CLASS_PROPERTY_DECLARATION_TYPE = 'class-property-declaration-type',
+  CLASS_PROPERTY_TYPE_DEFINITION = 'class-property-type-definition',
 
   /**
    * ```ts
@@ -95,7 +103,7 @@ export enum TYPE_KIND {
    * ```
    * ⏭️  `<number>`
    */
-  ANGLE_BRACKETS_TYPE_ASSERTION = 'angle-brackets-type-assertion',
+  ANGLE_BRACKETS_ASSERTION = 'angle-brackets-assertion',
 
   /**
    * ```ts
@@ -103,7 +111,7 @@ export enum TYPE_KIND {
    * ```
    * ⏭️  ` as any`
    */
-  AS_EXPRESSION = 'as-expression',
+  AS_ASSERTION = 'as-assertion',
 
   /**
    * ```ts
@@ -111,7 +119,7 @@ export enum TYPE_KIND {
    * ```
    * ⏭️  ` satisfies UserModel`
    */
-  SATISFIES_EXPRESSION = 'satisfies-expression',
+  SATISFIES_OPERATOR = 'satisfies-operator',
   /**
    * ```ts
    * declare const a: number;
@@ -123,15 +131,7 @@ export enum TYPE_KIND {
    * declare global {}
    * declare module 'g' {}
    * ```
-   * ⏭️  ↑↑ All statements that begin with `declare`
+   * ⏭️  👆 All statements that begin with `declare`
    */
-  DECLARE_STATEMENT = 'declare-statement',
-
-  /**
-   * ```ts
-   * const a: number = 1;
-   * ```
-   * ⏭️  `: number`
-   */
-  VARIABLE_TYPE_DECLARATION = 'variable-type-declaration'
+  DECLARE_STATEMENT = 'declare-statement'
 }

@@ -73,12 +73,12 @@
               "function-generic-definition",
               "function-call-generic",
               "tsx-component-generic",
-              "class-property-declaration-type",
-              "angle-brackets-type-assertion",
-              "as-expression",
-              "satisfies-expression",
+              "class-property-type-definition",
+              "angle-brackets-assertion",
+              "as-assertion",
+              "satisfies-operator",
               "declare-statement",
-              "variable-type-declaration"
+              "variable-type-definition"
             ],
             "markdownEnumDescriptions": [
               "```ts \ntype A  = ({ ... } & { ... }) | string[] \n```\n ⏭️  `type A = ({ ... } & { ... }) | string[]`",
@@ -94,7 +94,7 @@
               "```ts \nconst num: any = 77;\nconst num1 = (<number>num).toFixed(2);\n``` \n ⏭️  `<number>`",
               "```ts \nfn() as any;\n``` \n ⏭️  ` as any`",
               "```ts \nconst user = { ... } satisfies UserModel;\n``` \n ⏭️  ` satisfies UserModel`",
-              "```ts \ndeclare const a: number;\ndeclare function b(): number;\ndeclare class c {}\ndeclare module d {}\ndeclare namespace e {}\ndeclare enum f {}\ndeclare global {}\ndeclare module 'g' {}\n``` \n ⏭️  ↑↑ All statements that begin with `declare`",
+              "```ts \ndeclare const a: number;\ndeclare function b(): number;\ndeclare class c {}\ndeclare module d {}\ndeclare namespace e {}\ndeclare enum f {}\ndeclare global {}\ndeclare module 'g' {}\n``` \n ⏭️ 👆 All statements that begin with `declare`",
               "```ts \nconst a: number = 1;\n``` \n ⏭️  `: number`"
             ]
           },

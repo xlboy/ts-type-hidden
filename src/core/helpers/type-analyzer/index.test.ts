@@ -248,17 +248,17 @@ const eee: null | string = ''
     {
       range: { pos: 57, end: 65 },
       text: ': number',
-      kind: TYPE_KIND.VARIABLE_TYPE_DECLARATION
+      kind: TYPE_KIND.VARIABLE_TYPE_DEFINITION
     },
     {
       range: { pos: 68, end: 76 },
       text: ': string',
-      kind: TYPE_KIND.VARIABLE_TYPE_DECLARATION
+      kind: TYPE_KIND.VARIABLE_TYPE_DEFINITION
     },
     {
       range: { pos: 87, end: 102 },
       text: ': null | string',
-      kind: TYPE_KIND.VARIABLE_TYPE_DECLARATION
+      kind: TYPE_KIND.VARIABLE_TYPE_DEFINITION
     }
   ]);
 });
@@ -335,19 +335,19 @@ const c = 1 as number | string | null as 111 as 3;
   analyzer.analyze();
 
   expect(analyzer.analyzedTypes).toMatchObject([
-    { range: { pos: 12, end: 22 }, text: ' as number', kind: TYPE_KIND.AS_EXPRESSION },
+    { range: { pos: 12, end: 22 }, text: ' as number', kind: TYPE_KIND.AS_ASSERTION },
     {
       range: { pos: 35, end: 54 },
       text: ' as number | string',
-      kind: TYPE_KIND.AS_EXPRESSION
+      kind: TYPE_KIND.AS_ASSERTION
     },
     {
       range: { pos: 67, end: 93 },
       text: ' as number | string | null',
-      kind: TYPE_KIND.AS_EXPRESSION
+      kind: TYPE_KIND.AS_ASSERTION
     },
-    { range: { pos: 93, end: 100 }, text: ' as 111', kind: TYPE_KIND.AS_EXPRESSION },
-    { range: { pos: 100, end: 105 }, text: ' as 3', kind: TYPE_KIND.AS_EXPRESSION }
+    { range: { pos: 93, end: 100 }, text: ' as 111', kind: TYPE_KIND.AS_ASSERTION },
+    { range: { pos: 100, end: 105 }, text: ' as 3', kind: TYPE_KIND.AS_ASSERTION }
   ]);
 });
 
@@ -368,22 +368,22 @@ const d = () => {
     {
       range: { pos: 12, end: 29 },
       text: ' satisfies number',
-      kind: TYPE_KIND.SATISFIES_EXPRESSION
+      kind: TYPE_KIND.SATISFIES_OPERATOR
     },
     {
       range: { pos: 42, end: 68 },
       text: ' satisfies number | string',
-      kind: TYPE_KIND.SATISFIES_EXPRESSION
+      kind: TYPE_KIND.SATISFIES_OPERATOR
     },
     {
       range: { pos: 81, end: 114 },
       text: ' satisfies number | string | null',
-      kind: TYPE_KIND.SATISFIES_EXPRESSION
+      kind: TYPE_KIND.SATISFIES_OPERATOR
     },
     {
       range: { pos: 147, end: 161 },
       text: ' satisfies any',
-      kind: TYPE_KIND.SATISFIES_EXPRESSION
+      kind: TYPE_KIND.SATISFIES_OPERATOR
     }
   ]);
 });
@@ -401,17 +401,17 @@ const c = <number | string | null>1;
     {
       range: { pos: 10, end: 18 },
       text: '<number>',
-      kind: TYPE_KIND.ANGLE_BRACKETS_TYPE_ASSERTION
+      kind: TYPE_KIND.ANGLE_BRACKETS_ASSERTION
     },
     {
       range: { pos: 31, end: 48 },
       text: '<number | string>',
-      kind: TYPE_KIND.ANGLE_BRACKETS_TYPE_ASSERTION
+      kind: TYPE_KIND.ANGLE_BRACKETS_ASSERTION
     },
     {
       range: { pos: 61, end: 85 },
       text: '<number | string | null>',
-      kind: TYPE_KIND.ANGLE_BRACKETS_TYPE_ASSERTION
+      kind: TYPE_KIND.ANGLE_BRACKETS_ASSERTION
     }
   ]);
 });
@@ -469,22 +469,22 @@ class A {
       {
         range: { pos: 14, end: 22 },
         text: ': number',
-        kind: TYPE_KIND.CLASS_PROPERTY_DECLARATION_TYPE
+        kind: TYPE_KIND.CLASS_PROPERTY_TYPE_DEFINITION
       },
       {
         range: { pos: 34, end: 42 },
         text: ': string',
-        kind: TYPE_KIND.CLASS_PROPERTY_DECLARATION_TYPE
+        kind: TYPE_KIND.CLASS_PROPERTY_TYPE_DEFINITION
       },
       {
         range: { pos: 57, end: 73 },
         text: ': {\n    e: 1\n  }',
-        kind: TYPE_KIND.CLASS_PROPERTY_DECLARATION_TYPE
+        kind: TYPE_KIND.CLASS_PROPERTY_TYPE_DEFINITION
       },
       {
         range: { pos: 85, end: 97 },
         text: ': () => void',
-        kind: TYPE_KIND.CLASS_PROPERTY_DECLARATION_TYPE
+        kind: TYPE_KIND.CLASS_PROPERTY_TYPE_DEFINITION
       }
     ]);
   });
@@ -535,7 +535,7 @@ class A {
         text: ': boolean | number',
         kind: TYPE_KIND.FUNCTION_RETURN
       },
-      { range: { pos: 118, end: 125 }, text: ' as any', kind: TYPE_KIND.AS_EXPRESSION },
+      { range: { pos: 118, end: 125 }, text: ' as any', kind: TYPE_KIND.AS_ASSERTION },
       {
         range: { pos: 131, end: 161 },
         text: '  public b(a: number): string;',
@@ -556,11 +556,11 @@ class A {
         text: ': ReadonlyDeep<InnerCompilerConfig>',
         kind: TYPE_KIND.FUNCTION_RETURN
       },
-      { range: { pos: 380, end: 387 }, text: ' as any', kind: TYPE_KIND.AS_EXPRESSION },
+      { range: { pos: 380, end: 387 }, text: ' as any', kind: TYPE_KIND.AS_ASSERTION },
       {
         range: { pos: 387, end: 398 },
         text: ' as unknown',
-        kind: TYPE_KIND.AS_EXPRESSION
+        kind: TYPE_KIND.AS_ASSERTION
       },
       { range: { pos: 418, end: 424 }, text: ': void', kind: TYPE_KIND.FUNCTION_RETURN }
     ]);
@@ -647,9 +647,9 @@ describe('tsx', () => {
         text: '<number>',
         kind: TYPE_KIND.TSX_COMPONENT_GENERIC
       },
-      { range: { pos: 58, end: 65 }, text: ' as any', kind: TYPE_KIND.AS_EXPRESSION },
-      { range: { pos: 85, end: 95 }, text: ' as string', kind: TYPE_KIND.AS_EXPRESSION },
-      { range: { pos: 113, end: 123 }, text: ' as object', kind: TYPE_KIND.AS_EXPRESSION }
+      { range: { pos: 58, end: 65 }, text: ' as any', kind: TYPE_KIND.AS_ASSERTION },
+      { range: { pos: 85, end: 95 }, text: ' as string', kind: TYPE_KIND.AS_ASSERTION },
+      { range: { pos: 113, end: 123 }, text: ' as object', kind: TYPE_KIND.AS_ASSERTION }
     ]);
   });
 });
