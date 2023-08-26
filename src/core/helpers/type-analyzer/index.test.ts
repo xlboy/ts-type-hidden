@@ -76,13 +76,21 @@ const d = {
     analyzer.analyze();
 
     expect(analyzer.analyzedTypes).toMatchObject([
-      { range: { pos: 14, end: 20 }, text: ': A111', kind: TYPE_KIND.FUNCTION_PARAMETER },
+      {
+        range: { pos: 14, end: 20 },
+        text: ': A111',
+        kind: TYPE_KIND.FUNCTION_PARAMETER
+      },
       {
         range: { pos: 24, end: 31 },
         text: '?: A222',
         kind: TYPE_KIND.FUNCTION_PARAMETER
       },
-      { range: { pos: 49, end: 55 }, text: ': B111', kind: TYPE_KIND.FUNCTION_PARAMETER },
+      {
+        range: { pos: 49, end: 55 },
+        text: ': B111',
+        kind: TYPE_KIND.FUNCTION_PARAMETER
+      },
       {
         range: { pos: 59, end: 66 },
         text: '?: B222',
@@ -134,11 +142,31 @@ const d = {
     analyzer.analyze();
 
     expect(analyzer.analyzedTypes).toMatchObject([
-      { range: { pos: 14, end: 20 }, text: ': A111', kind: TYPE_KIND.FUNCTION_RETURN },
-      { range: { pos: 36, end: 42 }, text: ': B111', kind: TYPE_KIND.FUNCTION_RETURN },
-      { range: { pos: 70, end: 76 }, text: ': C111', kind: TYPE_KIND.FUNCTION_RETURN },
-      { range: { pos: 97, end: 103 }, text: ': D111', kind: TYPE_KIND.FUNCTION_RETURN },
-      { range: { pos: 114, end: 120 }, text: ': E111', kind: TYPE_KIND.FUNCTION_RETURN }
+      {
+        range: { pos: 14, end: 20 },
+        text: ': A111',
+        kind: TYPE_KIND.FUNCTION_RETURN
+      },
+      {
+        range: { pos: 36, end: 42 },
+        text: ': B111',
+        kind: TYPE_KIND.FUNCTION_RETURN
+      },
+      {
+        range: { pos: 70, end: 76 },
+        text: ': C111',
+        kind: TYPE_KIND.FUNCTION_RETURN
+      },
+      {
+        range: { pos: 97, end: 103 },
+        text: ': D111',
+        kind: TYPE_KIND.FUNCTION_RETURN
+      },
+      {
+        range: { pos: 114, end: 120 },
+        text: ': E111',
+        kind: TYPE_KIND.FUNCTION_RETURN
+      }
     ]);
   });
 
@@ -201,7 +229,11 @@ interface A111 {
   analyzer.analyze();
 
   expect(analyzer.analyzedTypes).toMatchObject([
-    { range: { pos: 1, end: 15 }, text: 'interface t {}', kind: TYPE_KIND.INTERFACE },
+    {
+      range: { pos: 1, end: 15 },
+      text: 'interface t {}',
+      kind: TYPE_KIND.INTERFACE
+    },
     {
       range: { pos: 17, end: 81 },
       text: 'interface A111 {\n  a: number;\n  b: string;\n  c: {\n    e: 1\n  }\n}',
@@ -220,7 +252,11 @@ type A111  = {
   analyzer.analyze();
 
   expect(analyzer.analyzedTypes).toMatchObject([
-    { range: { pos: 1, end: 17 }, text: 'type t = number;', kind: TYPE_KIND.TYPE_ALIAS },
+    {
+      range: { pos: 1, end: 17 },
+      text: 'type t = number;',
+      kind: TYPE_KIND.TYPE_ALIAS
+    },
     {
       range: { pos: 18, end: 58 },
       text: 'type A111  = {\n  a: number;\n} | 123 & {}',
@@ -229,12 +265,13 @@ type A111  = {
   ]);
 });
 
-it('variable statement', () => {
+it('variable type definition', () => {
   const analyzer = new TypeAnalyzer(`
 const a = 1;
 declare const b: number, c: string;
 const d: number, e: string;
 const eee: null | string = ''
+using a: usingAny = fn();
 `);
 
   analyzer.analyze();
@@ -258,6 +295,11 @@ const eee: null | string = ''
     {
       range: { pos: 87, end: 102 },
       text: ': null | string',
+      kind: TYPE_KIND.VARIABLE_TYPE_DEFINITION
+    },
+    {
+      range: { pos: 115, end: 125 },
+      text: ': usingAny',
       kind: TYPE_KIND.VARIABLE_TYPE_DEFINITION
     }
   ]);
@@ -326,16 +368,16 @@ it('as expression', () => {
 const a = 1 as number;
 const b = 1 as number | string;
 const c = 1 as number | string | null as 111 as 3;
-
-// const d = () => {
-  // return 333 as any
-// }
 `);
 
   analyzer.analyze();
 
   expect(analyzer.analyzedTypes).toMatchObject([
-    { range: { pos: 12, end: 22 }, text: ' as number', kind: TYPE_KIND.AS_ASSERTION },
+    {
+      range: { pos: 12, end: 22 },
+      text: ' as number',
+      kind: TYPE_KIND.AS_ASSERTION
+    },
     {
       range: { pos: 35, end: 54 },
       text: ' as number | string',
@@ -346,8 +388,16 @@ const c = 1 as number | string | null as 111 as 3;
       text: ' as number | string | null',
       kind: TYPE_KIND.AS_ASSERTION
     },
-    { range: { pos: 93, end: 100 }, text: ' as 111', kind: TYPE_KIND.AS_ASSERTION },
-    { range: { pos: 100, end: 105 }, text: ' as 3', kind: TYPE_KIND.AS_ASSERTION }
+    {
+      range: { pos: 93, end: 100 },
+      text: ' as 111',
+      kind: TYPE_KIND.AS_ASSERTION
+    },
+    {
+      range: { pos: 100, end: 105 },
+      text: ' as 3',
+      kind: TYPE_KIND.AS_ASSERTION
+    }
   ]);
 });
 
@@ -386,6 +436,38 @@ const d = () => {
       kind: TYPE_KIND.SATISFIES_OPERATOR
     }
   ]);
+});
+
+it('satisfies & as', () => {
+  const analyzer = new TypeAnalyzer(`
+const a = {} satisfies {} as const;
+const b = {} as const satisfies {};
+`);
+
+  analyzer.analyze();
+
+  expect(analyzer.analyzedTypes).toMatchObject([
+    {
+      kind: TYPE_KIND.SATISFIES_OPERATOR,
+      range: { pos: 13, end: 26 },
+      text: ' satisfies {}'
+    },
+    {
+      kind: TYPE_KIND.AS_ASSERTION,
+      range: { pos: 26, end: 35 },
+      text: ' as const'
+    },
+    {
+      kind: TYPE_KIND.AS_ASSERTION,
+      range: { pos: 49, end: 58 },
+      text: ' as const'
+    },
+    {
+      kind: TYPE_KIND.SATISFIES_OPERATOR,
+      range: { pos: 58, end: 71 },
+      text: ' satisfies {}'
+    }
+  ]); 
 });
 
 it('type assertion', () => {
@@ -535,7 +617,11 @@ class A {
         text: ': boolean | number',
         kind: TYPE_KIND.FUNCTION_RETURN
       },
-      { range: { pos: 118, end: 125 }, text: ' as any', kind: TYPE_KIND.AS_ASSERTION },
+      {
+        range: { pos: 118, end: 125 },
+        text: ' as any',
+        kind: TYPE_KIND.AS_ASSERTION
+      },
       {
         range: { pos: 131, end: 161 },
         text: '  public b(a: number): string;',
@@ -556,13 +642,21 @@ class A {
         text: ': ReadonlyDeep<InnerCompilerConfig>',
         kind: TYPE_KIND.FUNCTION_RETURN
       },
-      { range: { pos: 380, end: 387 }, text: ' as any', kind: TYPE_KIND.AS_ASSERTION },
+      {
+        range: { pos: 380, end: 387 },
+        text: ' as any',
+        kind: TYPE_KIND.AS_ASSERTION
+      },
       {
         range: { pos: 387, end: 398 },
         text: ' as unknown',
         kind: TYPE_KIND.AS_ASSERTION
       },
-      { range: { pos: 418, end: 424 }, text: ': void', kind: TYPE_KIND.FUNCTION_RETURN }
+      {
+        range: { pos: 418, end: 424 },
+        text: ': void',
+        kind: TYPE_KIND.FUNCTION_RETURN
+      }
     ]);
   });
 
@@ -647,9 +741,21 @@ describe('tsx', () => {
         text: '<number>',
         kind: TYPE_KIND.TSX_COMPONENT_GENERIC
       },
-      { range: { pos: 58, end: 65 }, text: ' as any', kind: TYPE_KIND.AS_ASSERTION },
-      { range: { pos: 85, end: 95 }, text: ' as string', kind: TYPE_KIND.AS_ASSERTION },
-      { range: { pos: 113, end: 123 }, text: ' as object', kind: TYPE_KIND.AS_ASSERTION }
+      {
+        range: { pos: 58, end: 65 },
+        text: ' as any',
+        kind: TYPE_KIND.AS_ASSERTION
+      },
+      {
+        range: { pos: 85, end: 95 },
+        text: ' as string',
+        kind: TYPE_KIND.AS_ASSERTION
+      },
+      {
+        range: { pos: 113, end: 123 },
+        text: ' as object',
+        kind: TYPE_KIND.AS_ASSERTION
+      }
     ]);
   });
 });
