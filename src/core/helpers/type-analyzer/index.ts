@@ -160,7 +160,7 @@ export class TypeAnalyzer {
       }
     }
 
-    // [class] context: `class A { a: number }`, get `number`
+    // [class] context: `class A { a?: number }`, get `?: number`
     function handleParentPropertyDeclaration(
       this: TypeAnalyzer,
       parent: ts.PropertyDeclaration,
@@ -168,17 +168,23 @@ export class TypeAnalyzer {
     ) {
       if (curChild === parent.type) {
         const children = parent.getChildren(this.sourceFile);
-        const startIndex = children.findIndex(child => child.pos === parent.type!.pos);
+        const index = children.findIndex(child => child.pos === parent.type!.pos);
         // :
-        const prevNode = children[startIndex - 1];
+        const prevNode = children[index - 1];
+        // ? or !
+        const operatorNode = children[index - 2];
+        const hasOperatorNode = [
+          ts.SyntaxKind.QuestionToken,
+          ts.SyntaxKind.ExclamationToken
+        ].includes(operatorNode.kind);
         return this.pushAnalyzedType(TYPE_KIND.CLASS_PROPERTY_TYPE_DEFINITION, [
-          prevNode.end - 1,
+          hasOperatorNode ? operatorNode.end - 1 : prevNode.end - 1,
           parent.type!.end
         ]);
       }
     }
 
-    // parent = `fn<number>()` | `new fn<number>()`, get `number`(typeArguments)
+    // parent = `fn<number>()` | `new fn<number>()`, get `<number>`(typeArguments)
     function handleParentCallOrNewExpr(
       this: TypeAnalyzer,
       parent: ts.CallExpression | ts.NewExpression,
@@ -204,7 +210,7 @@ export class TypeAnalyzer {
       }
     }
 
-    // context: `<number>a`, get `number`
+    // context: `<number>a`, get `<number>`
     function handleParentTypeAssertionExpr(
       this: TypeAnalyzer,
       parent: ts.TypeAssertion,
@@ -265,7 +271,7 @@ export class TypeAnalyzer {
       }
     }
 
-    // context = `const a: number`, curChild = `number`
+    // context = `const a: number`, curChild = `number`, get `: number`
     function handleParentVariableDeclaration(
       this: TypeAnalyzer,
       parent: ts.VariableDeclaration,
@@ -277,8 +283,11 @@ export class TypeAnalyzer {
       );
       // :
       const prevNode = children[index - 1];
+      // !
+      const operatorNode = children[index - 2];
+      const hasOperatorNode = operatorNode.kind === ts.SyntaxKind.ExclamationToken;
       this.pushAnalyzedType(TYPE_KIND.VARIABLE_TYPE_DEFINITION, [
-        prevNode.end - 1,
+        hasOperatorNode ? operatorNode.end - 1 : prevNode.end - 1,
         curChild.end
       ]);
     }
@@ -314,11 +323,11 @@ export class TypeAnalyzer {
       // :
       const prevNode = children[index - 1];
       // ?
-      const optionalToken = children[index - 2];
-      const isOptionalToken = optionalToken.kind === ts.SyntaxKind.QuestionToken;
+      const optionalNode = children[index - 2];
+      const hasOptionalNode = optionalNode.kind === ts.SyntaxKind.QuestionToken;
 
       this.pushAnalyzedType(TYPE_KIND.FUNCTION_PARAMETER, [
-        isOptionalToken ? optionalToken.pos : prevNode.pos,
+        hasOptionalNode ? optionalNode.pos : prevNode.pos,
         curChild.end
       ]);
     }

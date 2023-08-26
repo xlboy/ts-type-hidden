@@ -271,7 +271,8 @@ const a = 1;
 declare const b: number, c: string;
 const d: number, e: string;
 const eee: null | string = ''
-using a: usingAny = fn();
+let fff!: string = ''
+using ggg: usingAny = fn();
 `);
 
   analyzer.analyze();
@@ -298,7 +299,12 @@ using a: usingAny = fn();
       kind: TYPE_KIND.VARIABLE_TYPE_DEFINITION
     },
     {
-      range: { pos: 115, end: 125 },
+      range: { pos: 115, end: 124 },
+      text: '!: string',
+      kind: TYPE_KIND.VARIABLE_TYPE_DEFINITION
+    },
+    {
+      range: { pos: 139, end: 149 },
       text: ': usingAny',
       kind: TYPE_KIND.VARIABLE_TYPE_DEFINITION
     }
@@ -467,7 +473,7 @@ const b = {} as const satisfies {};
       range: { pos: 58, end: 71 },
       text: ' satisfies {}'
     }
-  ]); 
+  ]);
 });
 
 it('type assertion', () => {
@@ -533,7 +539,7 @@ new Set<PersistListener<S>>()
 });
 
 describe('class', () => {
-  it('property declaration', () => {
+  it('property type definition', () => {
     const analyzer = new TypeAnalyzer(`
 class A {
   a: number;
@@ -542,6 +548,8 @@ class A {
     e: 1
   }
   private d: () => void = () => {}
+  e!: boolean;
+  g?: string; 
 }
   `);
 
@@ -566,6 +574,16 @@ class A {
       {
         range: { pos: 85, end: 97 },
         text: ': () => void',
+        kind: TYPE_KIND.CLASS_PROPERTY_TYPE_DEFINITION
+      },
+      {
+        range: { pos: 112, end: 122 },
+        text: '!: boolean',
+        kind: TYPE_KIND.CLASS_PROPERTY_TYPE_DEFINITION
+      },
+      {
+        range: { end: 136, pos: 127 },
+        text: '?: string',
         kind: TYPE_KIND.CLASS_PROPERTY_TYPE_DEFINITION
       }
     ]);
