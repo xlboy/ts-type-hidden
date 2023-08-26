@@ -1,3 +1,8 @@
+# 0.5.0 (2023-08-26)
+- feat: support TypeScript 5.2 (`using`)
+
+- fix(type-analyzer): support operator(`?`/`!`) when defining type of `variable/class-property`
+
 # 0.4.0 (2023-08-22)
 
 - feat: support for ignoring specified type kinds when hiding (#5)
