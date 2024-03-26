@@ -88,7 +88,9 @@ export class TypeAnalyzer {
       ts.isVariableStatement(node) ||
       ts.isClassDeclaration(node) ||
       ts.isModuleDeclaration(node) ||
-      ts.isEnumDeclaration(node)
+      ts.isEnumDeclaration(node) ||
+      ts.isTypeOnlyImportOrExportDeclaration(node) ||
+      ts.isExportDeclaration(node)
     ) {
       if (parent) {
         this.handleDifferentNode(parent!, node);
@@ -116,7 +118,8 @@ export class TypeAnalyzer {
       [ts.SyntaxKind.CallExpression]: handleParentCallOrNewExpr.bind(this),
       [ts.SyntaxKind.NewExpression]: handleParentCallOrNewExpr.bind(this),
       [ts.SyntaxKind.PropertyDeclaration]: handleParentPropertyDeclaration.bind(this),
-      [ts.SyntaxKind.JsxSelfClosingElement]: handleParentJsxElement.bind(this)
+      [ts.SyntaxKind.JsxSelfClosingElement]: handleParentJsxElement.bind(this),
+      [ts.SyntaxKind.ImportDeclaration]: handleParentImportOrExportDeclaration.bind(this) // import type
     };
 
     const childNodeHandlers: NodeHandlers = {
@@ -127,7 +130,10 @@ export class TypeAnalyzer {
       [ts.SyntaxKind.ModuleDeclaration]: handleChildDeclareStatement.bind(this),
       [ts.SyntaxKind.EnumDeclaration]: handleChildDeclareStatement.bind(this),
       [ts.SyntaxKind.GetAccessor]: handleChildGetOrSetAccessor.bind(this),
-      [ts.SyntaxKind.SetAccessor]: handleChildGetOrSetAccessor.bind(this)
+      [ts.SyntaxKind.SetAccessor]: handleChildGetOrSetAccessor.bind(this),
+      [ts.SyntaxKind.ImportSpecifier]: handleImportOrExportSpecifier.bind(this), // import {type}
+      [ts.SyntaxKind.ExportSpecifier]: handleImportOrExportSpecifier.bind(this), // export {type}
+      [ts.SyntaxKind.ExportDeclaration]: handleParentImportOrExportDeclaration.bind(this) // export type {}
     };
 
     parentNodeHandlers[parent.kind]?.(parent, child);
@@ -159,7 +165,6 @@ export class TypeAnalyzer {
         ]);
       }
     }
-
     // [class] context: `class A { a?: number }`, get `?: number`
     function handleParentPropertyDeclaration(
       this: TypeAnalyzer,
@@ -412,6 +417,44 @@ export class TypeAnalyzer {
           curChild.end
         ]);
       }
+    }
+
+    // `import/export type ...;` get `import/export type ...;`
+    // especial:` export {a, type b}` get ` type b`
+    function handleParentImportOrExportDeclaration(
+      this: TypeAnalyzer,
+      curChild: ts.ImportDeclaration | ts.ExportDeclaration
+    ) {
+      if (curChild.kind === ts.SyntaxKind.ImportDeclaration) {
+        return this.pushAnalyzedType(TYPE_KIND.TYPE_ONLY_IMPORT_DECLARATION, [
+          curChild.pos,
+          curChild.end
+        ]);
+      } else {
+        // export type *
+        if (curChild?.isTypeOnly) {
+          return this.pushAnalyzedType(TYPE_KIND.TYPE_ONLY_EXPORT_DECLARATION, [
+            curChild.pos,
+            curChild.end
+          ]);
+        }
+        // export {type}
+        else {
+          ts.forEachChild(curChild, _child => this.visit(_child, curChild));
+        }
+      }
+    }
+    // context = `import {a1, type a2} from "a"` get `type a2`
+    function handleImportOrExportSpecifier(
+      this: TypeAnalyzer,
+      curChild: ts.ImportSpecifier | ts.ExportSpecifier
+    ) {
+      // TODO: offset
+      const mappingKind = {
+        [ts.SyntaxKind.ImportSpecifier]: TYPE_KIND.IMPORT_TYPE_SPECIFIER,
+        [ts.SyntaxKind.ExportSpecifier]: TYPE_KIND.EXPORT_TYPE_SPECIFIER
+      };
+      this.pushAnalyzedType(mappingKind[curChild.kind], [curChild.pos, curChild.end]);
     }
   }
 
