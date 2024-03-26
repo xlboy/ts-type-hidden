@@ -23,7 +23,7 @@
     "vscode": "^1.70.0",
     "node": ">=17.0.0"
   },
-  "packageManager": ">=pnpm@8.5.0",
+  "packageManager": "pnpm@8.15.0",
   "activationEvents": [
     "onStartupFinished"
   ],
@@ -78,7 +78,11 @@
               "as-assertion",
               "satisfies-operator",
               "declare-statement",
-              "variable-type-definition"
+              "variable-type-definition",
+              "type-only-import-declaration",
+              "import-specifier-declaration",
+              "type-only-export-declaration",
+              "export-specifier-declaration"
             ],
             "markdownEnumDescriptions": [
               "```ts \ntype A  = ({ ... } & { ... }) | string[] \n```\n ⏭️  `type A = ({ ... } & { ... }) | string[]`",
@@ -95,7 +99,13 @@
               "```ts \nfn() as any;\n``` \n ⏭️  ` as any`",
               "```ts \nconst user = { ... } satisfies UserModel;\n``` \n ⏭️  ` satisfies UserModel`",
               "```ts \ndeclare const a: number;\ndeclare function b(): number;\ndeclare class c {}\ndeclare module d {}\ndeclare namespace e {}\ndeclare enum f {}\ndeclare global {}\ndeclare module 'g' {}\n``` \n ⏭️ 👆 All statements that begin with `declare`",
-              "```ts \nconst a: number = 1;\n``` \n ⏭️  `: number`"
+              "```ts \nconst a: number = 1;\n``` \n ⏭️  `: number`",
+              "```ts \nimport type { ... } from 'a';\n``` \n ⏭️  `import type { ... } from 'a';`",
+              "```ts \nimport type * as a from 'a';\n``` \n ⏭️  `import type * as a from 'a';`",
+              "```ts \nimport {type a1} from 'a';\n``` \n ⏭️  `type a1`",
+              "```ts \nexport type { ... } from 'b';\n``` \n ⏭️  `export type { ... } from 'b';`",
+              "```ts \nexport type * from 'b';\n``` \n ⏭️  `export type * from 'b';`",
+              "```ts \nexport {type b1} from 'b';\n``` \n ⏭️  `type b1`"
             ]
           },
           "description": "Type kind to ignore when hiding"
@@ -115,6 +125,7 @@
     "build": "run-s type-check test && tsup",
     "dev": "tsup --watch src",
     "test": "vitest run",
+    "test:ui": "vitest --ui",
     "type-check": "tsc",
     "vsce-package": "run-s build && tsx scripts/vsce-package",
     "vsce-publish": "run-s build && tsx scripts/vsce-package --publish"
@@ -125,7 +136,9 @@
     "@types/lodash-es": "^4.17.7",
     "@types/mocha": "^10.0.1",
     "@types/vscode": "^1.70.0",
+    "@vitest/ui": "^1.4.0",
     "@vscode/test-electron": "^2.3.0",
+    "@vscode/vsce": "^2.24.0",
     "execa": "^7.1.1",
     "fs-extra": "^11.1.1",
     "glob": "^8.1.0",
@@ -138,7 +151,7 @@
     "type-fest": "^3.8.0",
     "typescript": "^5.2.2",
     "vite": "^4.3.1",
-    "vitest": "^0.28.4",
+    "vitest": "^1.4.0",
     "vsce": "^2.15.0"
   }
 }

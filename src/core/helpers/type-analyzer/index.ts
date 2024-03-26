@@ -426,14 +426,14 @@ export class TypeAnalyzer {
       curChild: ts.ImportDeclaration | ts.ExportDeclaration
     ) {
       if (curChild.kind === ts.SyntaxKind.ImportDeclaration) {
-        return this.pushAnalyzedType(TYPE_KIND.IMPORT_TYPE_DECLARATION, [
+        return this.pushAnalyzedType(TYPE_KIND.TYPE_ONLY_IMPORT_DECLARATION, [
           curChild.pos,
           curChild.end
         ]);
       } else {
         // export type *
         if (curChild?.isTypeOnly) {
-          return this.pushAnalyzedType(TYPE_KIND.EXPORT_TYPE_DECLARATION, [
+          return this.pushAnalyzedType(TYPE_KIND.TYPE_ONLY_EXPORT_DECLARATION, [
             curChild.pos,
             curChild.end
           ]);

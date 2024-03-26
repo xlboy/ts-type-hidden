@@ -3,5 +3,13 @@
   "vitest.enable": true,
   "vitest.include": ["**/*.test.ts"],
   "vitest.exclude": ["**/node_modules/**", "**/dist/**", "**/.history/**"],
-  "vitest.commandLine": "pnpm exec vitest -u --api.host 127.0.0.1"
+  "vitest.commandLine": "pnpm exec vitest -u --api.host 127.0.0.1",
+  "i18n-ally.localesPaths": [],
+  "cSpell.words": [
+    "indexs"
+  ],
+  "editor.tokenColorCustomizations": {
+    "comments": "",
+    "textMateRules": []
+  }
 }

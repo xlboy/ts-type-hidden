@@ -152,6 +152,37 @@ English | [简体中文](./README.zh.md)
     declare module 'g' {}
     ```
     ⏭️ 👆All statements that begin with `declare`
+  
+  - `type-only-import-declaration`:
+    ```ts
+    import type * as a from 'a';
+    import type { b1 } from 'b';
+    ```
+    ⏭️  `import type * as a from 'a';`
+
+    ⏭️  `import type { b1 } from 'b';`
+
+  - `import-type-specifier`:
+    ```ts
+    import {type a1, a2} from 'a';
+    ```
+    ⏭️  `type a1`
+  
+  - `type-only-export-declaration`:
+    ```ts
+    export type * as a from 'a';
+    export type { b1 } from 'b';
+    ```
+    ⏭️  `export type * from 'a';`
+
+    ⏭️  `export type { b1 } from 'b';`
+
+  - `export-type-specifier`:
+    ```ts
+    export {a1, type a2} from 'a';
+    ```
+    ⏭️  ` type a2`
+
   </details>
 
 ## CHANGELOG

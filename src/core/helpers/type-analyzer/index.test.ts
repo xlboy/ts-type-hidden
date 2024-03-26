@@ -795,12 +795,12 @@ import type {b1, b2} from "b"
       {
         range: { pos: 1, end: 28 },
         text: 'import type * as a from "a"',
-        kind: TYPE_KIND.IMPORT_TYPE_DECLARATION
+        kind: TYPE_KIND.TYPE_ONLY_IMPORT_DECLARATION
       },
       {
         range: { pos: 29, end: 58 },
         text: 'import type {b1, b2} from "b"',
-        kind: TYPE_KIND.IMPORT_TYPE_DECLARATION
+        kind: TYPE_KIND.TYPE_ONLY_IMPORT_DECLARATION
       }
     ]);
   });
@@ -876,12 +876,12 @@ export type * as c1 from "c"
       {
         range: { pos: 1, end: 23 },
         text: 'export type * from "a"',
-        kind: TYPE_KIND.EXPORT_TYPE_DECLARATION
+        kind: TYPE_KIND.TYPE_ONLY_EXPORT_DECLARATION
       },
       {
         range: { pos: 24, end: 52 },
         text: 'export type * as c1 from "c"',
-        kind: TYPE_KIND.EXPORT_TYPE_DECLARATION
+        kind: TYPE_KIND.TYPE_ONLY_EXPORT_DECLARATION
       }
     ]);
   });
@@ -897,7 +897,7 @@ export type {b1,b2} from "b"`,
       {
         range: { pos: 1, end: 29 },
         text: 'export type {b1,b2} from "b"',
-        kind: TYPE_KIND.EXPORT_TYPE_DECLARATION
+        kind: TYPE_KIND.TYPE_ONLY_EXPORT_DECLARATION
       }
     ]);
   });

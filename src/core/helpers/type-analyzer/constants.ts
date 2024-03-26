@@ -141,7 +141,7 @@ export enum TYPE_KIND {
    * ```
    * ⏭️  `import type ...;`
    */
-  IMPORT_TYPE_DECLARATION = 'import-type-declaration',
+  TYPE_ONLY_IMPORT_DECLARATION = 'type-only-import-declaration',
   /**
    * ```ts`
    * import { type c1, c2 } from 'c'; 
@@ -156,7 +156,7 @@ export enum TYPE_KIND {
    * ```
    * ⏭️  `export type ...;`
    */
-  EXPORT_TYPE_DECLARATION = 'export-type-declaration',
+  TYPE_ONLY_EXPORT_DECLARATION = 'type-only-export-declaration',
   /**
    * ```ts
    * export { type c1, c2 } from 'c'; 
