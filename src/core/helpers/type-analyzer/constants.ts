@@ -133,5 +133,35 @@ export enum TYPE_KIND {
    * ```
    * ⏭️  👆 All statements that begin with `declare`
    */
-  DECLARE_STATEMENT = 'declare-statement'
+  DECLARE_STATEMENT = 'declare-statement',
+  /**
+   * ```ts
+   * import type { a1 } from 'a';
+   * import type * as b1 from 'b';
+   * ```
+   * ⏭️  `import type ...;`
+   */
+  TYPE_ONLY_IMPORT_DECLARATION = 'type-only-import-declaration',
+  /**
+   * ```ts`
+   * import { type c1, c2 } from 'c'; 
+   * ```
+   * ⏭️  `type c`
+   */
+  IMPORT_TYPE_SPECIFIER = 'import-type-specifier',
+   /**
+   * ```ts
+   * export type { a } from 'a';
+   * export type * from 'b';
+   * ```
+   * ⏭️  `export type ...;`
+   */
+  TYPE_ONLY_EXPORT_DECLARATION = 'type-only-export-declaration',
+  /**
+   * ```ts
+   * export { type c1, c2 } from 'c'; 
+   * ```
+   * ⏭️  `type c1`
+   */
+  EXPORT_TYPE_SPECIFIER = 'export-type-specifier'
 }

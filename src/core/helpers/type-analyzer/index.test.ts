@@ -777,3 +777,154 @@ describe('tsx', () => {
     ]);
   });
 });
+
+describe('import', () => {
+  it('import type ...', () => {
+    const analyzer = new TypeAnalyzer(
+      `
+import type * as a from "a"
+import type {b1, b2} from "b"
+// NO import type * from "b"
+`,
+      true
+    );
+    analyzer.analyze();
+
+    expect(analyzer.analyzedTypes).toMatchObject([
+      // KEY: ImportClause.isTypeOnly = true
+      {
+        range: { pos: 1, end: 28 },
+        text: 'import type * as a from "a"',
+        kind: TYPE_KIND.TYPE_ONLY_IMPORT_DECLARATION
+      },
+      {
+        range: { pos: 29, end: 58 },
+        text: 'import type {b1, b2} from "b"',
+        kind: TYPE_KIND.TYPE_ONLY_IMPORT_DECLARATION
+      }
+    ]);
+  });
+  it('import {type ...} ...', () => {
+    const analyzer = new TypeAnalyzer(
+      `
+import {type c1, c2} from "c"
+import {type d1, type d2} from "d"
+`,
+      true
+    );
+    analyzer.analyze();
+    expect(analyzer.analyzedTypes).toMatchObject([
+      {
+        range: { pos: 9, end: 16 },
+        text: 'type c1',
+        kind: TYPE_KIND.IMPORT_TYPE_SPECIFIER
+      },
+      {
+        range: { pos: 39, end: 46 },
+        text: 'type d1',
+        kind: TYPE_KIND.IMPORT_TYPE_SPECIFIER
+      },
+      {
+        range: { pos: 47, end: 55 },
+        text: ' type d2',
+        kind: TYPE_KIND.IMPORT_TYPE_SPECIFIER
+      }
+    ]);
+  });
+  it('import {type ...} plus', () => {
+    const analyzer = new TypeAnalyzer(
+      `
+import {e1, type e2} from "e"
+import {type f1, f2, type f3} from "f"
+`,
+      true
+    );
+    analyzer.analyze();
+    expect(analyzer.analyzedTypes).toMatchObject([
+      {
+        range: { pos: 12, end: 20 },
+        text: ' type e2',
+        kind: TYPE_KIND.IMPORT_TYPE_SPECIFIER
+      },
+      {
+        range: { pos: 39, end: 46 },
+        text: 'type f1',
+        kind: TYPE_KIND.IMPORT_TYPE_SPECIFIER
+      },
+      {
+        range: { pos: 51, end: 59 },
+        text: ' type f3',
+        kind: TYPE_KIND.IMPORT_TYPE_SPECIFIER
+      }
+    ]);
+  });
+});
+
+
+describe('export', () => {
+  it('export type *', () => {
+    const analyzer = new TypeAnalyzer(
+      `
+export type * from "a"
+export type * as c1 from "c"
+`,
+      true
+    );
+    analyzer.analyze();
+
+    expect(analyzer.analyzedTypes).toMatchObject([
+      {
+        range: { pos: 1, end: 23 },
+        text: 'export type * from "a"',
+        kind: TYPE_KIND.TYPE_ONLY_EXPORT_DECLARATION
+      },
+      {
+        range: { pos: 24, end: 52 },
+        text: 'export type * as c1 from "c"',
+        kind: TYPE_KIND.TYPE_ONLY_EXPORT_DECLARATION
+      }
+    ]);
+  });
+  it('export type {...}', () => {
+    const analyzer = new TypeAnalyzer(
+      `
+export type {b1,b2} from "b"`,
+      true
+    );
+    analyzer.analyze();
+
+    expect(analyzer.analyzedTypes).toMatchObject([
+      {
+        range: { pos: 1, end: 29 },
+        text: 'export type {b1,b2} from "b"',
+        kind: TYPE_KIND.TYPE_ONLY_EXPORT_DECLARATION
+      }
+    ]);
+  });
+  it('export {type...} ...', () => {
+    const analyzer = new TypeAnalyzer(
+      `
+export {type c1, c2} from "c"
+export {type d1, type d2} from "d"`,
+      true
+    );
+    analyzer.analyze();
+    expect(analyzer.analyzedTypes).toMatchObject([
+      {
+        range: { pos: 9, end: 16 },
+        text: 'type c1',
+        kind: TYPE_KIND.EXPORT_TYPE_SPECIFIER
+      },
+      {
+        range: { pos: 39, end: 46 },
+        text: 'type d1',
+        kind: TYPE_KIND.EXPORT_TYPE_SPECIFIER
+      },
+      {
+        range: { pos: 47, end: 55 },
+        text: ' type d2',
+        kind: TYPE_KIND.EXPORT_TYPE_SPECIFIER
+      }
+    ]);
+  });
+});
