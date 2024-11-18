@@ -1,4 +1,11 @@
+# 0.6.0 (2024-11-18)
+
+- fix(type-analyzer): add missing generic parameters in class declarations (#11)
+
+- feat: add import/export type hidden (#9)
+
 # 0.5.0 (2023-08-26)
+
 - feat: support TypeScript 5.2 (`using`)
 
 - fix(type-analyzer): support operator(`?`/`!`) when defining type of `variable/class-property`

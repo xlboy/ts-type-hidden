@@ -35,6 +35,7 @@ const c = function<B extends 333, C extends 333>() {}
 const d = {
   a<B extends 444, C extends 444>() {}
 }
+class E<B extends 555, C extends 555> {}
 `
     );
     analyzer.analyze();
@@ -58,6 +59,11 @@ const d = {
       {
         range: { pos: 166, end: 196 },
         text: '<B extends 444, C extends 444>',
+        kind: TYPE_KIND.FUNCTION_GENERIC_DEFINITION
+      },
+      {
+        range: { pos: 211, end: 241 },
+        text: '<B extends 555, C extends 555>',
         kind: TYPE_KIND.FUNCTION_GENERIC_DEFINITION
       }
     ]);
@@ -859,7 +865,6 @@ import {type f1, f2, type f3} from "f"
     ]);
   });
 });
-
 
 describe('export', () => {
   it('export type *', () => {

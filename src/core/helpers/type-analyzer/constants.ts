@@ -52,8 +52,11 @@ export enum TYPE_KIND {
   /**
    * ```ts
    * function fn<A extends string, B = [A, '']>() {}
+   * class Str<StrCC extends string> {}
    * ```
    * ⏭️  `<A extends string, B = [A, '']>`
+   *
+   * ⏭️  `<StrCC extends string>`
    */
   FUNCTION_GENERIC_DEFINITION = 'function-generic-definition',
 
