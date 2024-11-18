@@ -110,6 +110,7 @@ export class TypeAnalyzer {
       [ts.SyntaxKind.FunctionExpression]: handleParentFunction.bind(this),
       [ts.SyntaxKind.ArrowFunction]: handleParentFunction.bind(this),
       [ts.SyntaxKind.GetAccessor]: handleParentFunction.bind(this),
+      [ts.SyntaxKind.ClassDeclaration]: handleParentClassDeclaration.bind(this),
       [ts.SyntaxKind.Parameter]: handleParentParameter.bind(this),
       [ts.SyntaxKind.VariableDeclaration]: handleParentVariableDeclaration.bind(this),
       [ts.SyntaxKind.AsExpression]: handleParentAsOrSatisfiesExpr.bind(this),
@@ -335,6 +336,31 @@ export class TypeAnalyzer {
         hasOptionalNode ? optionalNode.pos : prevNode.pos,
         curChild.end
       ]);
+    }
+
+    function handleParentClassDeclaration(
+      this: TypeAnalyzer,
+      parent: ts.ClassDeclaration,
+      curChild: ts.Node
+    ) {
+      if (ts.isTypeParameterDeclaration(curChild) && parent.typeParameters) {
+        const children = parent.getChildren(this.sourceFile);
+        // children.slice(startIndex, endIndex) = B extends 222, C extends ...
+        const startIndex = children.findIndex(
+          child => child.pos === parent.typeParameters!.pos
+        );
+        const endIndex = children.findIndex(
+          child => child.end === parent.typeParameters!.end
+        );
+        // <
+        const prevNode = children[startIndex - 1];
+        // >
+        const nextNode = children[endIndex + 1];
+        return this.pushAnalyzedType(TYPE_KIND.FUNCTION_GENERIC_DEFINITION, [
+          prevNode.end - 1,
+          nextNode.pos + 1
+        ]);
+      }
     }
 
     // FunctionDeclaration | MethodDeclaration | FunctionExpression
