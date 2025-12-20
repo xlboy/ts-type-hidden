@@ -1,3 +1,8 @@
+# 0.7.0 (2025-12-20)
+
+- fix(type-analyzer): remove isTypeOfExpression from treating value typeof as type node (#13)
+
+
 # 0.6.0 (2024-11-18)
 
 - fix(type-analyzer): add missing generic parameters in class declarations (#11)
