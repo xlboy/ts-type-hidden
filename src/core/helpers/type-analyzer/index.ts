@@ -76,7 +76,6 @@ export class TypeAnalyzer {
     if (
       ts.isTypeNode(node) ||
       ts.isTypeElement(node) ||
-      ts.isTypeOfExpression(node) ||
       ts.isTypeOperatorNode(node) ||
       ts.isTypeParameterDeclaration(node) ||
       ts.isTypePredicateNode(node) ||
