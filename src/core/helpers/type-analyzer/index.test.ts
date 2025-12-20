@@ -510,6 +510,39 @@ const c = <number | string | null>1;
   ]);
 });
 
+it('value typeof', () => {
+  const analyzer = new TypeAnalyzer(
+    `
+const a: "object" = "object";
+const b = typeof null as unknown as typeof a;
+type c = typeof b;`,
+    true
+  );
+  analyzer.analyze();
+  expect(analyzer.analyzedTypes).toMatchObject([
+    {
+      kind: TYPE_KIND.VARIABLE_TYPE_DEFINITION,
+      range: { pos: 8, end: 18 },
+      text: ': "object"'
+    },
+    {
+      kind: TYPE_KIND.AS_ASSERTION,
+      range: { pos: 52, end: 63 },
+      text: ' as unknown'
+    },
+    {
+      kind: TYPE_KIND.AS_ASSERTION,
+      range: { pos: 63, end: 75 },
+      text: ' as typeof a'
+    },
+    {
+      kind: TYPE_KIND.TYPE_ALIAS,
+      range: { pos: 77, end: 95 },
+      text: 'type c = typeof b;'
+    }
+  ]);
+});
+
 it('call expression', () => {
   const analyzer = new TypeAnalyzer(`
 b<number>();
