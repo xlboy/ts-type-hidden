@@ -1,3 +1,5 @@
+
+
 # TS Type Hidden
 
 Hide those familiar type codes! Get the snippet back to its simplest form!
@@ -17,7 +19,7 @@ English | [简体中文](./README.zh.md)
 
 ## Commands
 
-- `ts-type-hidden.toggle`: Toggle the current hidden mode
+- `ts-type-hidden.toogle`: Toggle the current hidden mode
   - Default keyboard shortcuts：
     - mac: `cmd + shift + t`
     - windows: `ctrl + shift + t`
